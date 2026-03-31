@@ -3,150 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>中文语法等级分析平台 | Chinese Grammar Level Analyzer</title>
-  <meta name="description" content="基于《国际中文教育中文水平等级标准》的中文语法等级分析工具。Analyze Chinese grammar levels based on GF 0025-2021.">
-  <link rel="stylesheet" href="css/style.css">
+  <title>墨析 · 中文语法等级分析</title>
+  <meta name="description" content="基于《国际中文教育中文水平等级标准》的中文语法等级分析工具。Ink-based Chinese grammar level analyzer built on GF 0025-2021.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Nav -->
-  <nav class="navbar">
-    <div class="nav-inner">
-      <a href="#" class="logo" data-i18n="logo">📚 中文语法等级分析</a>
-      <div class="nav-links">
-        <a href="#analyze" class="nav-link active" data-page="analyze" data-i18n="nav_analyze">🔍 文本分析</a>
-        <a href="#browse" class="nav-link" data-page="browse" data-i18n="nav_browse">📖 语法大纲</a>
-        <a href="#stats" class="nav-link" data-page="stats" data-i18n="nav_stats">📊 统计</a>
-      </div>
-      <div class="nav-actions">
-        <button id="langToggle" class="btn btn-sm btn-outline" title="Switch Language">
-          EN / 中
-        </button>
-        <button class="btn btn-sm btn-outline menu-toggle" id="mobileMenuBtn">☰</button>
-      </div>
+
+  <!-- Ink wash decorative canvas -->
+  <canvas id="inkCanvas"></canvas>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <span class="brand-mark">墨</span>
+      <span class="brand-name" data-i18n="brand">墨析</span>
+      <span class="brand-sub" data-i18n="brand_sub">语法等级分析</span>
+    </div>
+    <div class="nav-tabs">
+      <a href="#" class="nav-tab active" data-page="analyze" data-i18n="nav_analyze">析文</a>
+      <a href="#" class="nav-tab" data-page="browse" data-i18n="nav_browse">览纲</a>
+      <a href="#" class="nav-tab" data-page="stats" data-i18n="nav_stats">观象</a>
+    </div>
+    <div class="nav-actions">
+      <button id="langToggle" class="lang-btn">中 / EN</button>
+      <button class="menu-btn" id="mobileMenuBtn">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
 
   <!-- Mobile menu -->
   <div id="mobileMenu" class="mobile-menu hidden">
-    <a href="#analyze" class="mobile-link active" data-page="analyze" data-i18n="nav_analyze">🔍 文本分析</a>
-    <a href="#browse" class="mobile-link" data-page="browse" data-i18n="nav_browse">📖 语法大纲</a>
-    <a href="#stats" class="mobile-link" data-page="stats" data-i18n="nav_stats">📊 统计</a>
+    <a href="#" class="mobile-tab active" data-page="analyze" data-i18n="nav_analyze">析文</a>
+    <a href="#" class="mobile-tab" data-page="browse" data-i18n="nav_browse">览纲</a>
+    <a href="#" class="mobile-tab" data-page="stats" data-i18n="nav_stats">观象</a>
   </div>
 
-  <!-- Main Content -->
-  <main class="container">
+  <!-- Main -->
+  <main class="main">
 
-    <!-- ========== PAGE: Analyze ========== -->
+    <!-- ═══ PAGE: Analyze ═══ -->
     <section id="page-analyze" class="page active">
-      <div class="page-header">
-        <h1 data-i18n="analyze_title">🔍 中文语法等级分析</h1>
-        <p class="subtitle" data-i18n="analyze_subtitle">输入中文文本，自动识别语法点并判定等级难度</p>
+      <div class="hero">
+        <h1 class="hero-title">
+          <span data-i18n="analyze_title">落笔成文，探其法度</span>
+        </h1>
+        <p class="hero-desc" data-i18n="analyze_subtitle">输入中文文本，识别语法特征，判定等级难度</p>
       </div>
 
-      <div class="input-section">
-        <textarea id="textInput" class="text-input" rows="6"
-          placeholder="在此粘贴或输入中文文本... / Paste Chinese text here..."
-          data-i18n-placeholder="input_placeholder"></textarea>
-
-        <div class="example-bar">
-          <span class="example-label" data-i18n="examples">示例：</span>
-          <button class="btn btn-xs btn-tag" data-example="l1">1级</button>
-          <button class="btn btn-xs btn-tag" data-example="l2">2级</button>
-          <button class="btn btn-xs btn-tag" data-example="l3">3级</button>
-          <button class="btn btn-xs btn-tag" data-example="l4">4级</button>
-          <button class="btn btn-xs btn-tag" data-example="l5">5级</button>
-          <button class="btn btn-xs btn-tag" data-example="l6">6级</button>
+      <div class="input-area">
+        <div class="paper-input-wrap">
+          <textarea id="textInput" class="paper-input" rows="6"
+            data-i18n-placeholder="input_placeholder" placeholder="在此输入或粘贴中文文本…"></textarea>
+          <div class="paper-curl"></div>
         </div>
 
-        <button id="analyzeBtn" class="btn btn-primary btn-lg btn-block">
-          <span data-i18n="analyze_btn">🎯 开始分析</span>
-          <span class="btn-hint">(Ctrl+Enter)</span>
+        <div class="example-pills">
+          <span class="pill-label" data-i18n="examples">范本：</span>
+          <button class="pill lv1" data-example="l1">壹级</button>
+          <button class="pill lv2" data-example="l2">贰级</button>
+          <button class="pill lv3" data-example="l3">叁级</button>
+          <button class="pill lv4" data-example="l4">肆级</button>
+          <button class="pill lv5" data-example="l5">伍级</button>
+          <button class="pill lv6" data-example="l6">陆级</button>
+        </div>
+
+        <button id="analyzeBtn" class="analyze-btn">
+          <span class="btn-seal">析</span>
+          <span class="btn-text" data-i18n="analyze_btn">开始分析</span>
+          <span class="btn-shortcut">⌘↵</span>
         </button>
       </div>
 
       <!-- Results -->
       <div id="results" class="results hidden">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-value" id="statChars">0</div>
-            <div class="stat-label" data-i18n="stat_chars">文本字数</div>
+        <!-- Stat cards -->
+        <div class="result-stats">
+          <div class="r-stat">
+            <div class="r-stat-val" id="statChars">0</div>
+            <div class="r-stat-label" data-i18n="stat_chars">字数</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value" id="statSentences">0</div>
-            <div class="stat-label" data-i18n="stat_sentences">句子数</div>
+          <div class="r-stat">
+            <div class="r-stat-val" id="statSentences">0</div>
+            <div class="r-stat-label" data-i18n="stat_sentences">句数</div>
           </div>
-          <div class="stat-card highlight-card">
-            <div class="stat-value" id="statSuggested">-</div>
-            <div class="stat-label" data-i18n="stat_suggested">推荐等级</div>
+          <div class="r-stat featured">
+            <div class="r-stat-val" id="statSuggested">-</div>
+            <div class="r-stat-label" data-i18n="stat_suggested">推荐等级</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value" id="statMax">-</div>
-            <div class="stat-label" data-i18n="stat_max">最高等级</div>
-          </div>
-        </div>
-
-        <div id="levelDesc" class="level-description"></div>
-
-        <div class="charts-row">
-          <div class="chart-box">
-            <h3 data-i18n="chart_distribution">📊 语法等级分布</h3>
-            <div class="chart-wrapper">
-              <canvas id="pieChart"></canvas>
-            </div>
-          </div>
-          <div class="chart-box">
-            <h3 data-i18n="chart_bar">📈 等级柱状图</h3>
-            <div class="chart-wrapper">
-              <canvas id="barChart"></canvas>
-            </div>
+          <div class="r-stat">
+            <div class="r-stat-val" id="statMax">-</div>
+            <div class="r-stat-label" data-i18n="stat_max">最高等级</div>
           </div>
         </div>
 
-        <div class="highlight-section">
-          <h3 data-i18n="highlight_title">📝 语法标注文本</h3>
-          <div id="highlightedText" class="highlight-text"></div>
+        <!-- Level callout -->
+        <div id="levelDesc" class="level-callout"></div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="chart-panel">
+            <h3 class="panel-title" data-i18n="chart_distribution">语法等级分布</h3>
+            <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <h3 class="panel-title" data-i18n="chart_bar">等级柱状图</h3>
+            <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Highlighted text -->
+        <div class="panel">
+          <h3 class="panel-title" data-i18n="highlight_title">语法标注文本</h3>
+          <div id="highlightedText" class="annotated-text"></div>
           <div id="legend" class="legend"></div>
         </div>
 
-        <div class="matches-section">
-          <h3 data-i18n="matches_title">🔍 匹配详情</h3>
-          <div id="matchesList" class="matches-list"></div>
+        <!-- Match details -->
+        <div class="panel">
+          <h3 class="panel-title" data-i18n="matches_title">匹配详情</h3>
+          <div id="matchesList" class="match-list"></div>
         </div>
 
-        <div class="suggestions-section">
-          <h3 data-i18n="suggestions_title">💡 分析建议</h3>
-          <div id="suggestionsList" class="suggestions-list"></div>
+        <!-- Suggestions -->
+        <div class="panel">
+          <h3 class="panel-title" data-i18n="suggestions_title">分析建议</h3>
+          <div id="suggestionsList" class="suggestion-list"></div>
         </div>
       </div>
     </section>
 
-    <!-- ========== PAGE: Browse ========== -->
+    <!-- ═══ PAGE: Browse ═══ -->
     <section id="page-browse" class="page">
-      <div class="page-header">
-        <h1 data-i18n="browse_title">📖 语法等级大纲</h1>
-        <p class="subtitle" data-i18n="browse_subtitle">按等级浏览《国际中文教育中文水平等级标准》语法点</p>
+      <div class="hero">
+        <h1 class="hero-title" data-i18n="browse_title">览纲 · 语法等级大纲</h1>
+        <p class="hero-desc" data-i18n="browse_subtitle">按等级浏览《国际中文教育中文水平等级标准》语法点</p>
       </div>
-      <div class="level-tabs" id="levelTabs"></div>
-      <div class="search-bar">
-        <input type="text" id="grammarSearch" class="search-input"
-          data-i18n-placeholder="search_placeholder" placeholder="搜索语法点… / Search grammar points…">
+      <div class="level-filter" id="levelTabs"></div>
+      <div class="search-wrap">
+        <input type="text" id="grammarSearch" class="search-box"
+          data-i18n-placeholder="search_placeholder" placeholder="搜索语法点…">
       </div>
       <div id="grammarList" class="grammar-list"></div>
     </section>
 
-    <!-- ========== PAGE: Stats ========== -->
+    <!-- ═══ PAGE: Stats ═══ -->
     <section id="page-stats" class="page">
-      <div class="page-header">
-        <h1 data-i18n="stats_title">📊 语法数据统计</h1>
-        <p class="subtitle" data-i18n="stats_subtitle">各等级语法点数量概览</p>
+      <div class="hero">
+        <h1 class="hero-title" data-i18n="stats_title">观象 · 数据统计</h1>
+        <p class="hero-desc" data-i18n="stats_subtitle">各等级语法点数量概览</p>
       </div>
-      <div class="stats-overview" id="statsOverview"></div>
-      <div class="chart-box full-width">
-        <h3 data-i18n="stats_chart_title">各等级语法点数量</h3>
-        <div class="chart-wrapper chart-tall">
-          <canvas id="statsBarChart"></canvas>
-        </div>
+      <div class="stats-cards" id="statsOverview"></div>
+      <div class="panel panel-wide">
+        <h3 class="panel-title" data-i18n="stats_chart_title">各等级语法点数量</h3>
+        <div class="chart-wrap chart-tall"><canvas id="statsBarChart"></canvas></div>
       </div>
     </section>
 
@@ -154,9 +168,10 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p data-i18n="footer">
-      📚 中文语法等级分析平台 | 基于《国际中文教育中文水平等级标准》(GF 0025-2021) | 仅供学术研究使用
-    </p>
+    <div class="footer-inner">
+      <span class="footer-brand">墨析</span>
+      <span data-i18n="footer">基于《国际中文教育中文水平等级标准》(GF 0025-2021) · 仅供学术研究</span>
+    </div>
   </footer>
 
   <script src="js/grammar-data.js"></script>
