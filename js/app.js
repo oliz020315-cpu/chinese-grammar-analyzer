@@ -13,6 +13,7 @@
   let pieChart = null;
   let barChart = null;
   let statsBarChart = null;
+  let lastResult = null; // Store last analysis for export
 
   // ── i18n ──────────────────────────────────────────────
   const I18N = {
@@ -49,6 +50,17 @@
       most_points: '语法点最多等级',
       match_count: '语法点数量',
       points_unit: '个语法点',
+      export_csv: '📄 导出 CSV',
+      llm_title: '🤖 LLM 辅助分析',
+      llm_note: '配置 OpenAI 兼容 API 以获得更全面的语法识别',
+      llm_api_key: 'API Key',
+      llm_endpoint: 'API 地址',
+      llm_model: '模型',
+      llm_analyze: 'LLM 智能分析',
+      llm_placeholder_key: 'sk-...',
+      llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
+      llm_placeholder_model: 'gpt-4o-mini',
+      analyzing: '分析中…',
     },
     en: {
       brand: 'MoXi',
@@ -83,6 +95,17 @@
       most_points: 'Most Points',
       match_count: 'Grammar Points',
       points_unit: 'points',
+      export_csv: '📄 Export CSV',
+      llm_title: '🤖 LLM-Assisted Analysis',
+      llm_note: 'Configure an OpenAI-compatible API for comprehensive grammar identification',
+      llm_api_key: 'API Key',
+      llm_endpoint: 'Endpoint',
+      llm_model: 'Model',
+      llm_analyze: 'LLM Smart Analyze',
+      llm_placeholder_key: 'sk-...',
+      llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
+      llm_placeholder_model: 'gpt-4o-mini',
+      analyzing: 'Analyzing…',
     }
   };
 
@@ -98,6 +121,7 @@
 
   // ── Init ──────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
+    initLLMPanel();
     initInkCanvas();
     bindNav();
     bindAnalyzePage();
@@ -106,6 +130,17 @@
     bindMobileMenu();
     bindKeyboard();
   });
+
+  // ── LLM Panel Init ────────────────────────────────────
+  function initLLMPanel() {
+    // Restore saved config
+    const savedKey = localStorage.getItem('moxi_llm_key') || '';
+    const savedEndpoint = localStorage.getItem('moxi_llm_endpoint') || '';
+    const savedModel = localStorage.getItem('moxi_llm_model') || '';
+    document.getElementById('llmApiKey').value = savedKey;
+    document.getElementById('llmEndpoint').value = savedEndpoint;
+    document.getElementById('llmModel').value = savedModel;
+  }
 
   // ── Ink Canvas Background ─────────────────────────────
   function initInkCanvas() {
@@ -247,12 +282,91 @@
       });
     });
     document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+    document.getElementById('exportCSV').addEventListener('click', exportCSV);
+    document.getElementById('llmAnalyzeBtn').addEventListener('click', runLLMAnalysis);
+  }
+
+  // ── Export CSV ────────────────────────────────────────
+  function exportCSV() {
+    if (!lastResult || !lastResult.matches.length) return;
+    const dict = I18N[currentLang];
+    const BOM = '\uFEFF';
+    let csv = BOM + ['HSK等级', '匹配片段', '语法点', '来源', '位置'].join(',') + '\n';
+    for (const m of lastResult.matches) {
+      const lvl = `HSK${m.level}`;
+      const pattern = `"${m.pattern.replace(/"/g, '""')}"`;
+      const gp = `"${m.grammarPoint.replace(/"/g, '""')}"`;
+      const source = m.source === 'llm' ? 'LLM' : m.source === 'database' ? '数据库' : '规则';
+      csv += [lvl, pattern, gp, source, m.position].join(',') + '\n';
+    }
+    // Add summary
+    csv += '\n' + ['统计项', '值'].join(',') + '\n';
+    csv += ['文本字数', lastResult.charCount].join(',') + '\n';
+    csv += ['句子数', lastResult.sentenceCount].join(',') + '\n';
+    csv += ['匹配总数', lastResult.matches.length].join(',') + '\n';
+    csv += ['推荐等级', `HSK${lastResult.suggestedLevel}`].join(',') + '\n';
+    csv += ['最高等级', `HSK${lastResult.maxLevel}`].join(',') + '\n';
+    csv += ['平均等级', lastResult.avgLevel].join(',') + '\n';
+    for (let l = 1; l <= 6; l++) {
+      csv += [`HSK${l}匹配数`, lastResult.levelDistribution[l] || 0].join(',') + '\n';
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `语法分析_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── LLM Analysis ──────────────────────────────────────
+  async function runLLMAnalysis() {
+    const text = document.getElementById('textInput').value.trim();
+    if (!text) return;
+
+    const apiKey = document.getElementById('llmApiKey').value.trim();
+    const endpoint = document.getElementById('llmEndpoint').value.trim();
+    const model = document.getElementById('llmModel').value.trim();
+
+    if (!apiKey || !endpoint) {
+      alert(currentLang === 'zh' ? '请填写 API Key 和 API 地址' : 'Please fill in API Key and Endpoint');
+      return;
+    }
+
+    // Save to localStorage
+    localStorage.setItem('moxi_llm_key', apiKey);
+    localStorage.setItem('moxi_llm_endpoint', endpoint);
+    localStorage.setItem('moxi_llm_model', model);
+
+    analyzer.configureLLM({ apiKey, endpoint, model: model || 'gpt-4o-mini' });
+
+    const btn = document.getElementById('llmAnalyzeBtn');
+    btn.disabled = true;
+    btn.textContent = I18N[currentLang].analyzing;
+
+    try {
+      const result = await analyzer.analyzeWithLLM(text, currentLang);
+      lastResult = result;
+      renderResults(result);
+      // Show LLM note
+      if (result.llmNote) {
+        const noteEl = document.getElementById('llmNote');
+        if (noteEl) noteEl.textContent = result.llmNote;
+      }
+    } catch (e) {
+      alert('LLM analysis failed: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = I18N[currentLang].llm_analyze;
+    }
   }
 
   function runAnalysis() {
     const text = document.getElementById('textInput').value.trim();
     if (!text) return;
     const result = analyzer.analyze(text, currentLang);
+    lastResult = result;
     renderResults(result);
   }
 

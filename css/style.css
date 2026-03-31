@@ -587,6 +587,119 @@ body {
   font-style: italic;
 }
 
+/* --- Export --- */
+.export-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+.export-btn {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  padding: 0.5rem 1.2rem;
+  border: 1.5px solid var(--ink-mid);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-dark);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.03em;
+}
+.export-btn:hover {
+  background: var(--ink-black);
+  color: var(--paper);
+  border-color: var(--ink-black);
+}
+
+/* --- LLM Panel --- */
+.llm-panel {
+  margin-top: 1rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.llm-panel details {
+  background: #fff;
+  border: 1px solid var(--paper-deep);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+.llm-panel summary {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink-dark);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  list-style: none;
+}
+.llm-panel summary::-webkit-details-marker { display: none; }
+.llm-panel summary::before {
+  content: '▸ ';
+  transition: transform 0.2s ease;
+}
+.llm-panel details[open] summary::before {
+  content: '▾ ';
+}
+.llm-note {
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  margin: 0.4rem 0 0.8rem;
+}
+.llm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.llm-input {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--paper-deep);
+  border-radius: var(--radius);
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  background: var(--paper-warm);
+  color: var(--ink-dark);
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+.llm-input:focus { border-color: var(--accent-red); }
+.llm-label {
+  font-size: 0.75rem;
+  color: var(--ink-light);
+  margin-top: -0.3rem;
+}
+.llm-btn {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  padding: 0.55rem 1rem;
+  border: 1.5px solid var(--accent-red);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--accent-red);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  width: 100%;
+}
+.llm-btn:hover:not(:disabled) {
+  background: var(--accent-red);
+  color: #fff;
+}
+.llm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.llm-result-note {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink-mid);
+  min-height: 1.2em;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
   .nav { padding: 0 1rem; }

@@ -77,6 +77,24 @@
           <span class="btn-text" data-i18n="analyze_btn">开始分析</span>
           <span class="btn-shortcut">⌘↵</span>
         </button>
+
+        <!-- LLM Config (collapsible) -->
+        <div class="llm-panel">
+          <details>
+            <summary data-i18n="llm_title">🤖 LLM 辅助分析</summary>
+            <p class="llm-note" data-i18n="llm_note">配置 OpenAI 兼容 API 以获得更全面的语法识别</p>
+            <div class="llm-fields">
+              <input type="password" id="llmApiKey" class="llm-input" data-i18n-placeholder="llm_placeholder_key" placeholder="sk-...">
+              <label class="llm-label" data-i18n="llm_api_key">API Key</label>
+              <input type="url" id="llmEndpoint" class="llm-input" data-i18n-placeholder="llm_placeholder_endpoint" placeholder="https://api.openai.com/v1/chat/completions">
+              <label class="llm-label" data-i18n="llm_endpoint">API 地址</label>
+              <input type="text" id="llmModel" class="llm-input" data-i18n-placeholder="llm_placeholder_model" placeholder="gpt-4o-mini">
+              <label class="llm-label" data-i18n="llm_model">模型</label>
+            </div>
+            <button id="llmAnalyzeBtn" class="llm-btn" data-i18n="llm_analyze">LLM 智能分析</button>
+            <div id="llmNote" class="llm-result-note"></div>
+          </details>
+        </div>
       </div>
 
       <!-- Results -->
@@ -133,6 +151,11 @@
         <div class="panel">
           <h3 class="panel-title" data-i18n="suggestions_title">分析建议</h3>
           <div id="suggestionsList" class="suggestion-list"></div>
+        </div>
+
+        <!-- Export -->
+        <div class="export-bar" id="exportBar">
+          <button id="exportCSV" class="export-btn" data-i18n="export_csv">📄 导出 CSV</button>
         </div>
       </div>
     </section>

@@ -4662,12 +4662,12 @@ const GRAMMAR_DATA = [
 ];
 
 const LEVEL_NAMES = {
-  "1": "入门/Beginner",
-  "2": "初级/Elementary",
-  "3": "中级/Intermediate",
-  "4": "中高级/Upper-Intermediate",
-  "5": "高级/Advanced",
-  "6": "精通/Proficient"
+  "1": "HSK1",
+  "2": "HSK2",
+  "3": "HSK3",
+  "4": "HSK4",
+  "5": "HSK5",
+  "6": "HSK6"
 };
 
 const LEVEL_COLORS = {
