@@ -7,6 +7,7 @@
   'use strict';
 
   // ── State ──────────────────────────────────────────────
+  const BOM = '\uFEFF'; // UTF-8 BOM for CSV export (ensures Excel opens Chinese correctly)
   const analyzer = new GrammarAnalyzer(GRAMMAR_DATA);
   let currentLang = 'zh';
   let currentLevelFilter = 'all';
@@ -61,6 +62,9 @@
       llm_placeholder_key: 'sk-...',
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
       llm_placeholder_model: 'gpt-4o-mini',
+      llm_security_title: '安全提示',
+      llm_security: 'API Key 仅存储在您的浏览器本地（base64 编码），不会上传到任何服务器。他人无法通过网络获取您的 Key，但需注意：①浏览器开发者工具可解码查看 ②共享/公共设备上其他用户可能访问。使用完毕后建议点击下方「清除 API Key」。',
+      llm_clear: '🗑️ 清除 API Key（分析历史不受影响）',
       analyzing: '分析中…',
       toast_analyzing: '🔍 正在分析文本…',
       toast_local_done: '✅ 本地分析完成，识别到 {n} 处语法点',
@@ -127,6 +131,9 @@
       llm_placeholder_key: 'sk-...',
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
       llm_placeholder_model: 'gpt-4o-mini',
+      llm_security_title: 'Security',
+      llm_security: 'Your API Key is stored locally in your browser (base64 encoded) and is never sent to any server. No one on the network can access your Key. However: ① Browser DevTools can decode and view it ② Other users on shared/public devices may access it. Consider clicking "Clear API Key" below after use.',
+      llm_clear: '🗑️ Clear API Key (history kept)',
       analyzing: 'Analyzing…',
       toast_analyzing: '🔍 Analyzing text…',
       toast_local_done: '✅ Local analysis complete: {n} grammar points found',
@@ -202,12 +209,17 @@
 
   // ── LLM Panel Init ────────────────────────────────────
   function initLLMPanel() {
-    const savedKey = localStorage.getItem('moxi_llm_key') || '';
-    const savedEndpoint = localStorage.getItem('moxi_llm_endpoint') || '';
-    const savedModel = localStorage.getItem('moxi_llm_model') || '';
-    document.getElementById('llmApiKey').value = savedKey;
-    document.getElementById('llmEndpoint').value = savedEndpoint;
-    document.getElementById('llmModel').value = savedModel;
+    try {
+      const rawKey = localStorage.getItem('moxi_llm_key') || '';
+      const savedKey = rawKey ? decodeURIComponent(escape(atob(rawKey))) : '';
+      const savedEndpoint = localStorage.getItem('moxi_llm_endpoint') || '';
+      const savedModel = localStorage.getItem('moxi_llm_model') || '';
+      document.getElementById('llmApiKey').value = savedKey;
+      document.getElementById('llmEndpoint').value = savedEndpoint;
+      document.getElementById('llmModel').value = savedModel;
+    } catch (e) {
+      // Silent fail — don't log errors that might reveal key info
+    }
   }
 
   function hasLLMConfig() {
@@ -220,9 +232,17 @@
     const key = document.getElementById('llmApiKey').value.trim();
     const endpoint = document.getElementById('llmEndpoint').value.trim();
     const model = document.getElementById('llmModel').value.trim();
-    localStorage.setItem('moxi_llm_key', key);
-    localStorage.setItem('moxi_llm_endpoint', endpoint);
-    localStorage.setItem('moxi_llm_model', model);
+    // SECURITY NOTE: localStorage is client-side storage.
+    // Base64 encoding is NOT encryption — it only prevents casual shoulder-surfing.
+    // For real security, users should clear the key after each session.
+    try {
+      localStorage.setItem('moxi_llm_key', key ? btoa(unescape(encodeURIComponent(key))) : '');
+      localStorage.setItem('moxi_llm_endpoint', endpoint);
+      localStorage.setItem('moxi_llm_model', model);
+    } catch (e) {
+      // Do NOT log the error message — it might leak key-related info to console
+      // localStorage might be full or disabled — degrade silently
+    }
     analyzer.configureLLM({ apiKey: key, endpoint, model: model || 'gpt-4o-mini' });
   }
 
@@ -368,6 +388,51 @@
     });
     document.getElementById('analyzeBtn').addEventListener('click', runUnifiedAnalysis);
     document.getElementById('exportCSV').addEventListener('click', exportCSV);
+
+    // Bind LLM clear button — only clears API config, never touches pure local analysis history
+    const clearBtn = document.getElementById('llmClearBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        const hasLLMHistory = getHistory().some(h => h.llmUsed);
+        const isZh = currentLang === 'zh';
+        let alsoClearHistory = false;
+
+        if (hasLLMHistory) {
+          // User has LLM-assisted history records — ask if they want to also remove those
+          alsoClearHistory = confirm(
+            isZh
+              ? '⚠️ 您的 API Key 即将被清除。\n\n检测到存在 LLM 辅助分析的历史记录，是否一并删除？\n\n• 点击「确定」= 清除 API Key，同时删除这些 LLM 分析记录\n• 点击「取消」= 仅清除 API Key，所有分析历史保持不变'
+              : '⚠️ Your API Key is about to be cleared.\n\nLLM-assisted analysis history detected. Also remove these records?\n\n• Click "OK" = Clear API Key AND remove these LLM records\n• Click "Cancel" = Clear API Key ONLY, all history stays'
+          );
+        }
+
+        // 1. Clear API config (always)
+        document.getElementById('llmApiKey').value = '';
+        document.getElementById('llmEndpoint').value = '';
+        document.getElementById('llmModel').value = '';
+        try {
+          localStorage.removeItem('moxi_llm_key');
+          localStorage.removeItem('moxi_llm_endpoint');
+          localStorage.removeItem('moxi_llm_model');
+        } catch (e) { /* silent */ }
+        analyzer.configureLLM(null);
+
+        // 2. Optionally clear LLM history records
+        if (alsoClearHistory) {
+          try {
+            let history = getHistory();
+            const llmCount = history.filter(h => h.llmUsed).length;
+            history = history.filter(h => !h.llmUsed);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            showToast(isZh
+              ? `🗑️ API Key 已清除，同时删除了 ${llmCount} 条 LLM 分析记录`
+              : `🗑️ API Key cleared, ${llmCount} LLM records removed`);
+          } catch (e) { /* silent */ }
+        } else {
+          showToast(isZh ? '🗑️ API Key 已清除（分析历史已保留）' : '🗑️ API Key cleared (history kept)');
+        }
+      });
+    }
   }
 
   // ── Unified Analysis ──────────────────────────────────
@@ -438,24 +503,28 @@
   }
 
   function saveToHistory(text, result) {
-    const history = getHistory();
-    const record = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      text: text,
-      charCount: result.charCount,
-      sentenceCount: result.sentenceCount,
-      suggestedLevel: result.suggestedLevel,
-      maxLevel: result.maxLevel,
-      avgLevel: result.avgLevel,
-      matchCount: result.matches.length,
-      levelDistribution: { ...result.levelDistribution },
-      llmUsed: result.llmUsed || false,
-      timestamp: Date.now(),
-      lang: currentLang,
-    };
-    history.unshift(record);
-    if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    try {
+      const history = getHistory();
+      const record = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        text: text,
+        charCount: result.charCount,
+        sentenceCount: result.sentenceCount,
+        suggestedLevel: result.suggestedLevel,
+        maxLevel: result.maxLevel,
+        avgLevel: result.avgLevel,
+        matchCount: result.matches.length,
+        levelDistribution: { ...result.levelDistribution },
+        llmUsed: result.llmUsed || false,
+        timestamp: Date.now(),
+        lang: currentLang,
+      };
+      history.unshift(record);
+      if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (e) {
+      console.warn('Failed to save history:', e.message);
+    }
   }
 
   function deleteHistoryItem(id) {

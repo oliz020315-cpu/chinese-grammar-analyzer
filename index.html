@@ -85,13 +85,20 @@
           <details>
             <summary data-i18n="llm_title">🤖 LLM 辅助分析</summary>
             <p class="llm-note" data-i18n="llm_note">配置 OpenAI 兼容 API 以获得更全面的语法识别。填写后点击上方「开始分析」将自动使用 LLM 辅助。</p>
+            <div class="llm-security-note">
+              🔒 <span data-i18n="llm_security_title">安全提示</span>
+              <span class="llm-security-detail" data-i18n="llm_security">API Key 仅存储在您的浏览器本地（base64 编码），不会上传到任何服务器。他人无法通过网络获取您的 Key，但需注意：①浏览器开发者工具可解码查看 ②共享/公共设备上其他用户可能访问。使用完毕后建议点击下方「清除 API Key」。</span>
+            </div>
             <div class="llm-fields">
-              <input type="password" id="llmApiKey" class="llm-input" data-i18n-placeholder="llm_placeholder_key" placeholder="sk-...">
+              <input type="password" id="llmApiKey" class="llm-input" autocomplete="off" data-i18n-placeholder="llm_placeholder_key" placeholder="sk-...">
               <label class="llm-label" data-i18n="llm_api_key">API Key</label>
               <input type="url" id="llmEndpoint" class="llm-input" data-i18n-placeholder="llm_placeholder_endpoint" placeholder="https://api.openai.com/v1/chat/completions">
               <label class="llm-label" data-i18n="llm_endpoint">API 地址</label>
               <input type="text" id="llmModel" class="llm-input" data-i18n-placeholder="llm_placeholder_model" placeholder="gpt-4o-mini">
               <label class="llm-label" data-i18n="llm_model">模型</label>
+            </div>
+            <div class="llm-actions">
+              <button id="llmClearBtn" class="llm-clear-btn" data-i18n="llm_clear">🗑️ 清除 API Key（分析历史不受影响）</button>
             </div>
             <div id="llmNote" class="llm-result-note"></div>
           </details>

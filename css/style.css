@@ -20,6 +20,7 @@
   --accent-red: #c23b22;
   --accent-red-light: rgba(194, 59, 34, 0.12);
   --accent-gold: #c8a45c;
+  --accent-gold-dark: #a07830;
 
   --lv1: #2e7d32; --lv1-bg: rgba(46,125,50,0.10);
   --lv2: #1565c0; --lv2-bg: rgba(21,101,192,0.10);
@@ -712,6 +713,45 @@ body {
   font-size: 0.82rem;
   color: var(--ink-mid);
   min-height: 1.2em;
+}
+.llm-security-note {
+  font-size: 0.75rem;
+  color: var(--ink-light);
+  background: var(--paper-warm);
+  border-left: 3px solid var(--accent-gold);
+  padding: 0.5rem 0.7rem;
+  margin: 0.5rem 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  line-height: 1.6;
+}
+.llm-security-note [data-i18n="llm_security_title"] {
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+  margin-right: 0.3em;
+}
+.llm-security-detail {
+  display: block;
+  margin-top: 0.2rem;
+}
+.llm-actions {
+  margin-top: 0.6rem;
+  text-align: right;
+}
+.llm-clear-btn {
+  background: none;
+  border: 1px solid var(--ink-faint);
+  color: var(--ink-light);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-serif);
+}
+.llm-clear-btn:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+  background: var(--accent-red-light);
 }
 
 /* --- Toast Notifications --- */
