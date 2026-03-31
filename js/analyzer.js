@@ -40,13 +40,13 @@ class GrammarAnalyzer {
       {pattern: /几[个点分号]?/g, level: 1, desc_zh: '疑问代词（几）', desc_en: 'Interrogative (几)'},
       {pattern: /多少/g, level: 1, desc_zh: '疑问代词（多少）', desc_en: 'Interrogative (多少)'},
       // 程度
-      {pattern: /很[好吃大漂亮多高低快慢早晚远近新_old贵便宜难容易忙]/g, level: 1, desc_zh: '程度副词（很）', desc_en: 'Degree adverb (很)'},
+      {pattern: /很[好吃大漂亮多高低快慢早晚远近新贵便宜难容易忙]/g, level: 1, desc_zh: '程度副词（很）', desc_en: 'Degree adverb (很)'},
       {pattern: /真[好吃大漂亮多高低]/g, level: 1, desc_zh: '程度副词（真）', desc_en: 'Degree adverb (真)'},
       {pattern: /太[好吃大漂亮多了高了]/g, level: 1, desc_zh: '程度副词（太）', desc_en: 'Degree adverb (太)'},
       // 数量
       {pattern: /一[个只条张本位名次间把朵块片双对群批套串碗杯瓶斤公斤米]/g, level: 1, desc_zh: '数量词（一+量词）', desc_en: 'Numeral+classifier'},
       // 代词
-      {pattern: /我[们们]?|你[们们]?|他[们们]?|她[们们]?|它[们们]?/g, level: 1, desc_zh: '人称代词', desc_en: 'Personal pronoun'},
+      {pattern: /我[们]?|你[们]?|他[们]?|她[们]?|它[们]?/g, level: 1, desc_zh: '人称代词', desc_en: 'Personal pronoun'},
       {pattern: /这[个些里样种时候天儿点]/g, level: 1, desc_zh: '指示代词（这…）', desc_en: 'Demonstrative (这…)'},
       {pattern: /那[个些里样种时候天儿点]/g, level: 1, desc_zh: '指示代词（那…）', desc_en: 'Demonstrative (那…)'},
       // 介词/方位
@@ -63,7 +63,7 @@ class GrammarAnalyzer {
       // 时态/体
       {pattern: /正在[^，。？！]{1,8}/g, level: 2, desc_zh: '进行体（正在）', desc_en: 'Progressive (正在)'},
       {pattern: /在[^，。？！]{0,3}着/g, level: 2, desc_zh: '进行体（在…着）', desc_en: 'Progressive (在…着)'},
-      {pattern: /了(?=[过]), level: 2, desc_zh: '完成体（了）', desc_en: 'Perfective (了)'},
+      {pattern: /了(?=[过])/g, level: 2, desc_zh: '完成体（了）', desc_en: 'Perfective (了)'},
       {pattern: /过[。？！了，]/g, level: 2, desc_zh: '经历体（过）', desc_en: 'Experiential (过)'},
       {pattern: /已经[^，。？！]{1,8}[了]/g, level: 2, desc_zh: '完成体（已经…了）', desc_en: 'Perfective (已经…了)'},
       // 比较
@@ -75,13 +75,13 @@ class GrammarAnalyzer {
       {pattern: /可以/g, level: 2, desc_zh: '能愿动词（可以）', desc_en: 'Modal (可以)'},
       {pattern: /必须/g, level: 2, desc_zh: '能愿动词（必须）', desc_en: 'Modal (必须)'},
       {pattern: /得[到起]/g, level: 2, desc_zh: '可能补语（得）', desc_en: 'Potential complement (得)'},
-      {pattern: /不到|不起/g, level: 2, desc_zh: '可能补语（不+动+到/起）', desc_en: 'Potential complement negation'},
+      {pattern: /.不到|.不起/g, level: 2, desc_zh: '可能补语（不+动+到/起）', desc_en: 'Potential complement negation'},
       {pattern: /把(?=[\u4e00-\u9fff])/g, level: 2, desc_zh: '介词（把）', desc_en: 'Preposition (把)'},
       {pattern: /被(?=[\u4e00-\u9fff])/g, level: 2, desc_zh: '介词（被）', desc_en: 'Preposition (被)'},
       // 时间
       {pattern: /的时候/g, level: 2, desc_zh: '时间表达（…的时候）', desc_en: 'Time expression (…的时候)'},
       {pattern: /从[^，。？！]{1,6}[开始起]/g, level: 2, desc_zh: '时间起点（从…起）', desc_en: 'Time starting point (从…起)'},
-      {pattern: /到[^，。？！]{1,6}[为止为止]/g, level: 2, desc_zh: '时间终点（到…为止）', desc_en: 'Time endpoint (到…为止)'},
+      {pattern: /到[^，。？！]{1,6}为止/g, level: 2, desc_zh: '时间终点（到…为止）', desc_en: 'Time endpoint (到…为止)'},
       // 动量
       {pattern: /了两次|吃了三|看了几|去了多/g, level: 2, desc_zh: '动量表达', desc_en: 'Verb-reduplication / frequency'},
       {pattern: /一下/g, level: 2, desc_zh: '动量补语（一下）', desc_en: 'Frequency complement (一下)'},

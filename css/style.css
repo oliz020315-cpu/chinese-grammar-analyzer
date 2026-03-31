@@ -288,6 +288,20 @@ body {
 .analyze-btn:hover::before { left: 100%; }
 .analyze-btn:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
 .analyze-btn:active { transform: translateY(0); }
+.analyze-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.analyze-btn:disabled::before { display: none; }
+.analyze-btn.loading .btn-seal {
+  animation: sealSpin 1s linear infinite;
+}
+@keyframes sealSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .btn-seal {
   font-family: var(--font-display);

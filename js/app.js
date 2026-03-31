@@ -82,6 +82,7 @@
       history_level: '等级',
       history_matches: '语法点',
       history_text_preview: '文本预览',
+      history_record_count: '记录总数',
     },
     en: {
       brand: 'MoXi',
@@ -147,6 +148,7 @@
       history_level: 'Level',
       history_matches: 'Matches',
       history_text_preview: 'Text Preview',
+      history_record_count: 'Total Records',
     }
   };
 
@@ -381,6 +383,7 @@
     isAnalyzing = true;
     const btn = document.getElementById('analyzeBtn');
     btn.disabled = true;
+    btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent = I18N[currentLang].analyzing;
     showToast(I18N[currentLang].toast_analyzing);
 
@@ -419,6 +422,7 @@
     } finally {
       isAnalyzing = false;
       btn.disabled = false;
+      btn.classList.remove('loading');
       btn.querySelector('.btn-text').textContent = I18N[currentLang].analyze_btn;
     }
   }
@@ -544,32 +548,43 @@
   function exportCSV() {
     if (!lastResult || !lastResult.matches.length) return;
     const dict = I18N[currentLang];
-    const BOM = '\uFEFF';
-    let csv = BOM + ['HSK等级', '匹配片段', '语法点', '来源', '位置'].join(',') + '\n';
+    const headers = currentLang === 'zh'
+      ? ['HSK等级', '匹配片段', '语法点', '来源', '位置']
+      : ['HSK Level', 'Match', 'Grammar Point', 'Source', 'Position'];
+    const statHeaders = currentLang === 'zh'
+      ? ['统计项', '值']
+      : ['Metric', 'Value'];
+    let csv = BOM + headers.join(',') + '\n';
     for (const m of lastResult.matches) {
       const lvl = `HSK${m.level}`;
       const pattern = `"${m.pattern.replace(/"/g, '""')}"`;
       const gp = `"${m.grammarPoint.replace(/"/g, '""')}"`;
-      const source = m.source === 'llm' ? 'LLM' : m.source === 'database' ? '数据库' : '规则';
+      const sourceLabels = { llm: 'LLM', database: currentLang === 'zh' ? '数据库' : 'Database', builtin: currentLang === 'zh' ? '规则' : 'Builtin' };
+      const source = sourceLabels[m.source] || m.source;
       csv += [lvl, pattern, gp, source, m.position].join(',') + '\n';
     }
     // Add summary
-    csv += '\n' + ['统计项', '值'].join(',') + '\n';
-    csv += ['文本字数', lastResult.charCount].join(',') + '\n';
-    csv += ['句子数', lastResult.sentenceCount].join(',') + '\n';
-    csv += ['匹配总数', lastResult.matches.length].join(',') + '\n';
-    csv += ['推荐等级', `HSK${lastResult.suggestedLevel}`].join(',') + '\n';
-    csv += ['最高等级', `HSK${lastResult.maxLevel}`].join(',') + '\n';
-    csv += ['平均等级', lastResult.avgLevel].join(',') + '\n';
+    const statLabels = currentLang === 'zh'
+      ? { chars: '文本字数', sentences: '句子数', total: '匹配总数', suggested: '推荐等级', max: '最高等级', avg: '平均等级', matches: 'HSK{n}匹配数' }
+      : { chars: 'Characters', sentences: 'Sentences', total: 'Total Matches', suggested: 'Suggested Level', max: 'Max Level', avg: 'Avg Level', matches: 'HSK{n} Matches' };
+    csv += '\n' + statHeaders.join(',') + '\n';
+    csv += [statLabels.chars, lastResult.charCount].join(',') + '\n';
+    csv += [statLabels.sentences, lastResult.sentenceCount].join(',') + '\n';
+    csv += [statLabels.total, lastResult.matches.length].join(',') + '\n';
+    csv += [statLabels.suggested, `HSK${lastResult.suggestedLevel}`].join(',') + '\n';
+    csv += [statLabels.max, `HSK${lastResult.maxLevel}`].join(',') + '\n';
+    csv += [statLabels.avg, lastResult.avgLevel].join(',') + '\n';
     for (let l = 1; l <= 6; l++) {
-      csv += [`HSK${l}匹配数`, lastResult.levelDistribution[l] || 0].join(',') + '\n';
+      csv += [statLabels.matches.replace('{n}', l), lastResult.levelDistribution[l] || 0].join(',') + '\n';
     }
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `语法分析_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = currentLang === 'zh'
+      ? `语法分析_${new Date().toISOString().slice(0,10)}.csv`
+      : `grammar_analysis_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
