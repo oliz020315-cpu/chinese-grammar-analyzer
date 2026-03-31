@@ -14,6 +14,7 @@
   let barChart = null;
   let statsBarChart = null;
   let lastResult = null; // Store last analysis for export
+  let isAnalyzing = false;
 
   // ── i18n ──────────────────────────────────────────────
   const I18N = {
@@ -61,6 +62,26 @@
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
       llm_placeholder_model: 'gpt-4o-mini',
       analyzing: '分析中…',
+      toast_analyzing: '🔍 正在分析文本…',
+      toast_local_done: '✅ 本地分析完成，识别到 {n} 处语法点',
+      toast_llm_done: '✅ LLM 辅助分析完成，识别到 {n} 处语法点',
+      toast_llm_fail: '⚠️ LLM 分析失败，已回退为本地分析',
+      toast_no_text: '⚠️ 请输入文本后再分析',
+      toast_saved: '💾 分析结果已保存到历史记录',
+      nav_history: '史笺',
+      history_title: '史笺 · 分析历史',
+      history_subtitle: '本页所有数据保存在浏览器本地，不会上传至云端',
+      history_cloud_note: '🔒 隐私提示：历史记录仅存储在您的浏览器本地（localStorage），不会同步到任何云端服务器。清除浏览器数据可能导致记录丢失。',
+      history_empty: '暂无分析历史',
+      history_clear: '清空历史',
+      history_clear_confirm: '确定要清空所有历史记录吗？',
+      history_reanalyze: '重新分析',
+      history_delete: '删除',
+      history_time: '分析时间',
+      history_chars: '字数',
+      history_level: '等级',
+      history_matches: '语法点',
+      history_text_preview: '文本预览',
     },
     en: {
       brand: 'MoXi',
@@ -106,6 +127,26 @@
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
       llm_placeholder_model: 'gpt-4o-mini',
       analyzing: 'Analyzing…',
+      toast_analyzing: '🔍 Analyzing text…',
+      toast_local_done: '✅ Local analysis complete: {n} grammar points found',
+      toast_llm_done: '✅ LLM analysis complete: {n} grammar points found',
+      toast_llm_fail: '⚠️ LLM analysis failed, fell back to local analysis',
+      toast_no_text: '⚠️ Please enter text before analyzing',
+      toast_saved: '💾 Analysis result saved to history',
+      nav_history: 'History',
+      history_title: 'History · Analysis Records',
+      history_subtitle: 'All data on this page is stored locally in your browser, not in the cloud',
+      history_cloud_note: '🔒 Privacy note: History records are stored only in your browser locally (localStorage). They are NOT synced to any cloud server. Clearing browser data may result in data loss.',
+      history_empty: 'No analysis history yet',
+      history_clear: 'Clear All',
+      history_clear_confirm: 'Are you sure you want to clear all history?',
+      history_reanalyze: 'Re-analyze',
+      history_delete: 'Delete',
+      history_time: 'Time',
+      history_chars: 'Chars',
+      history_level: 'Level',
+      history_matches: 'Matches',
+      history_text_preview: 'Text Preview',
     }
   };
 
@@ -121,25 +162,66 @@
 
   // ── Init ──────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
+    initToastContainer();
     initLLMPanel();
     initInkCanvas();
     bindNav();
     bindAnalyzePage();
     bindBrowsePage();
+    bindHistoryPage();
     bindLangToggle();
     bindMobileMenu();
     bindKeyboard();
   });
 
+  // ── Toast System ──────────────────────────────────────
+  function initToastContainer() {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+  }
+
+  function showToast(message, duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-in';
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.remove('toast-in');
+      toast.classList.add('toast-out');
+      setTimeout(() => toast.remove(), 400);
+    }, duration);
+  }
+
   // ── LLM Panel Init ────────────────────────────────────
   function initLLMPanel() {
-    // Restore saved config
     const savedKey = localStorage.getItem('moxi_llm_key') || '';
     const savedEndpoint = localStorage.getItem('moxi_llm_endpoint') || '';
     const savedModel = localStorage.getItem('moxi_llm_model') || '';
     document.getElementById('llmApiKey').value = savedKey;
     document.getElementById('llmEndpoint').value = savedEndpoint;
     document.getElementById('llmModel').value = savedModel;
+  }
+
+  function hasLLMConfig() {
+    const key = document.getElementById('llmApiKey').value.trim();
+    const endpoint = document.getElementById('llmEndpoint').value.trim();
+    return !!(key && endpoint);
+  }
+
+  function saveLLMConfig() {
+    const key = document.getElementById('llmApiKey').value.trim();
+    const endpoint = document.getElementById('llmEndpoint').value.trim();
+    const model = document.getElementById('llmModel').value.trim();
+    localStorage.setItem('moxi_llm_key', key);
+    localStorage.setItem('moxi_llm_endpoint', endpoint);
+    localStorage.setItem('moxi_llm_model', model);
+    analyzer.configureLLM({ apiKey: key, endpoint, model: model || 'gpt-4o-mini' });
   }
 
   // ── Ink Canvas Background ─────────────────────────────
@@ -226,6 +308,7 @@
     document.querySelectorAll('.mobile-tab').forEach(l => l.classList.toggle('active', l.dataset.page === pageId));
     if (pageId === 'stats') renderStatsPage();
     if (pageId === 'browse') renderBrowsePage();
+    if (pageId === 'history') renderHistoryPage();
   }
 
   // ── Language toggle ───────────────────────────────────
@@ -268,7 +351,7 @@
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
-        document.getElementById('analyzeBtn').click();
+        runUnifiedAnalysis();
       }
     });
   }
@@ -281,9 +364,180 @@
         if (EXAMPLES[key]) document.getElementById('textInput').value = EXAMPLES[key];
       });
     });
-    document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+    document.getElementById('analyzeBtn').addEventListener('click', runUnifiedAnalysis);
     document.getElementById('exportCSV').addEventListener('click', exportCSV);
-    document.getElementById('llmAnalyzeBtn').addEventListener('click', runLLMAnalysis);
+  }
+
+  // ── Unified Analysis ──────────────────────────────────
+  async function runUnifiedAnalysis() {
+    if (isAnalyzing) return;
+
+    const text = document.getElementById('textInput').value.trim();
+    if (!text) {
+      showToast(I18N[currentLang].toast_no_text);
+      return;
+    }
+
+    isAnalyzing = true;
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = I18N[currentLang].analyzing;
+    showToast(I18N[currentLang].toast_analyzing);
+
+    let result;
+    try {
+      if (hasLLMConfig()) {
+        // Has API config → use LLM-assisted analysis
+        saveLLMConfig();
+        result = await analyzer.analyzeWithLLM(text, currentLang);
+        if (result.llmUsed) {
+          showToast(I18N[currentLang].toast_llm_done.replace('{n}', result.matches.length));
+        } else {
+          // LLM failed, fell back to local
+          showToast(I18N[currentLang].toast_llm_fail);
+        }
+      } else {
+        // No API config → local analysis only
+        result = analyzer.analyze(text, currentLang);
+        showToast(I18N[currentLang].toast_local_done.replace('{n}', result.matches.length));
+      }
+
+      lastResult = result;
+      renderResults(result);
+
+      // Save to history
+      saveToHistory(text, result);
+      showToast(I18N[currentLang].toast_saved);
+
+      // Show LLM note if exists
+      if (result.llmNote) {
+        const noteEl = document.getElementById('llmNote');
+        if (noteEl) noteEl.textContent = result.llmNote;
+      }
+    } catch (e) {
+      showToast(I18N[currentLang].toast_llm_fail + ': ' + e.message);
+    } finally {
+      isAnalyzing = false;
+      btn.disabled = false;
+      btn.querySelector('.btn-text').textContent = I18N[currentLang].analyze_btn;
+    }
+  }
+
+  // ── History Management ────────────────────────────────
+  const HISTORY_KEY = 'moxi_history';
+  const MAX_HISTORY = 50;
+
+  function getHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch { return []; }
+  }
+
+  function saveToHistory(text, result) {
+    const history = getHistory();
+    const record = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      text: text,
+      charCount: result.charCount,
+      sentenceCount: result.sentenceCount,
+      suggestedLevel: result.suggestedLevel,
+      maxLevel: result.maxLevel,
+      avgLevel: result.avgLevel,
+      matchCount: result.matches.length,
+      levelDistribution: { ...result.levelDistribution },
+      llmUsed: result.llmUsed || false,
+      timestamp: Date.now(),
+      lang: currentLang,
+    };
+    history.unshift(record);
+    if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
+  function deleteHistoryItem(id) {
+    let history = getHistory();
+    history = history.filter(h => h.id !== id);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistoryPage();
+  }
+
+  function clearAllHistory() {
+    if (confirm(I18N[currentLang].history_clear_confirm)) {
+      localStorage.removeItem(HISTORY_KEY);
+      renderHistoryPage();
+    }
+  }
+
+  function bindHistoryPage() {
+    const clearBtn = document.getElementById('historyClearBtn');
+    if (clearBtn) clearBtn.addEventListener('click', clearAllHistory);
+  }
+
+  function renderHistoryPage() {
+    const history = getHistory();
+    const listEl = document.getElementById('historyList');
+    const emptyEl = document.getElementById('historyEmpty');
+    const countEl = document.getElementById('historyCount');
+
+    if (countEl) countEl.textContent = history.length;
+
+    if (!history.length) {
+      if (listEl) listEl.innerHTML = '';
+      if (emptyEl) emptyEl.classList.remove('hidden');
+      return;
+    }
+
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    if (!listEl) return;
+
+    const dict = I18N[currentLang];
+    listEl.innerHTML = history.map(h => {
+      const date = new Date(h.timestamp);
+      const timeStr = date.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', {
+        month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      const preview = h.text.length > 60 ? h.text.slice(0, 60) + '…' : h.text;
+      const llmBadge = h.llmUsed ? ' 🤖' : '';
+      return `
+        <div class="history-item" data-id="${h.id}">
+          <div class="history-header">
+            <span class="history-time">${timeStr}${llmBadge}</span>
+            <div class="history-actions">
+              <button class="history-btn history-reanalyze" data-text="${escapeHtml(h.text).replace(/"/g, '&quot;')}">${dict.history_reanalyze}</button>
+              <button class="history-btn history-delete" data-id="${h.id}">${dict.history_delete}</button>
+            </div>
+          </div>
+          <div class="history-preview">${escapeHtml(preview)}</div>
+          <div class="history-meta">
+            <span>${dict.history_chars}：${h.charCount}</span>
+            <span>${dict.history_matches}：${h.matchCount}</span>
+            <span class="history-level-badge" style="background:${LEVEL_COLORS[h.suggestedLevel] || '#888'}">${LEVEL_NAMES[h.suggestedLevel] || 'L' + h.suggestedLevel}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Bind delete buttons
+    listEl.querySelectorAll('.history-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteHistoryItem(btn.dataset.id);
+      });
+    });
+
+    // Bind re-analyze buttons
+    listEl.querySelectorAll('.history-reanalyze').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const text = btn.dataset.text;
+        if (text) {
+          document.getElementById('textInput').value = text;
+          switchPage('analyze');
+        }
+      });
+    });
   }
 
   // ── Export CSV ────────────────────────────────────────
@@ -318,56 +572,6 @@
     a.download = `语法分析_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  // ── LLM Analysis ──────────────────────────────────────
-  async function runLLMAnalysis() {
-    const text = document.getElementById('textInput').value.trim();
-    if (!text) return;
-
-    const apiKey = document.getElementById('llmApiKey').value.trim();
-    const endpoint = document.getElementById('llmEndpoint').value.trim();
-    const model = document.getElementById('llmModel').value.trim();
-
-    if (!apiKey || !endpoint) {
-      alert(currentLang === 'zh' ? '请填写 API Key 和 API 地址' : 'Please fill in API Key and Endpoint');
-      return;
-    }
-
-    // Save to localStorage
-    localStorage.setItem('moxi_llm_key', apiKey);
-    localStorage.setItem('moxi_llm_endpoint', endpoint);
-    localStorage.setItem('moxi_llm_model', model);
-
-    analyzer.configureLLM({ apiKey, endpoint, model: model || 'gpt-4o-mini' });
-
-    const btn = document.getElementById('llmAnalyzeBtn');
-    btn.disabled = true;
-    btn.textContent = I18N[currentLang].analyzing;
-
-    try {
-      const result = await analyzer.analyzeWithLLM(text, currentLang);
-      lastResult = result;
-      renderResults(result);
-      // Show LLM note
-      if (result.llmNote) {
-        const noteEl = document.getElementById('llmNote');
-        if (noteEl) noteEl.textContent = result.llmNote;
-      }
-    } catch (e) {
-      alert('LLM analysis failed: ' + e.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = I18N[currentLang].llm_analyze;
-    }
-  }
-
-  function runAnalysis() {
-    const text = document.getElementById('textInput').value.trim();
-    if (!text) return;
-    const result = analyzer.analyze(text, currentLang);
-    lastResult = result;
-    renderResults(result);
   }
 
   function renderResults(result) {

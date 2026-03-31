@@ -26,6 +26,7 @@
     <div class="nav-tabs">
       <a href="#" class="nav-tab active" data-page="analyze" data-i18n="nav_analyze">析文</a>
       <a href="#" class="nav-tab" data-page="browse" data-i18n="nav_browse">览纲</a>
+      <a href="#" class="nav-tab" data-page="history" data-i18n="nav_history">史笺</a>
       <a href="#" class="nav-tab" data-page="stats" data-i18n="nav_stats">观象</a>
     </div>
     <div class="nav-actions">
@@ -40,6 +41,7 @@
   <div id="mobileMenu" class="mobile-menu hidden">
     <a href="#" class="mobile-tab active" data-page="analyze" data-i18n="nav_analyze">析文</a>
     <a href="#" class="mobile-tab" data-page="browse" data-i18n="nav_browse">览纲</a>
+    <a href="#" class="mobile-tab" data-page="history" data-i18n="nav_history">史笺</a>
     <a href="#" class="mobile-tab" data-page="stats" data-i18n="nav_stats">观象</a>
   </div>
 
@@ -82,7 +84,7 @@
         <div class="llm-panel">
           <details>
             <summary data-i18n="llm_title">🤖 LLM 辅助分析</summary>
-            <p class="llm-note" data-i18n="llm_note">配置 OpenAI 兼容 API 以获得更全面的语法识别</p>
+            <p class="llm-note" data-i18n="llm_note">配置 OpenAI 兼容 API 以获得更全面的语法识别。填写后点击上方「开始分析」将自动使用 LLM 辅助。</p>
             <div class="llm-fields">
               <input type="password" id="llmApiKey" class="llm-input" data-i18n-placeholder="llm_placeholder_key" placeholder="sk-...">
               <label class="llm-label" data-i18n="llm_api_key">API Key</label>
@@ -91,7 +93,6 @@
               <input type="text" id="llmModel" class="llm-input" data-i18n-placeholder="llm_placeholder_model" placeholder="gpt-4o-mini">
               <label class="llm-label" data-i18n="llm_model">模型</label>
             </div>
-            <button id="llmAnalyzeBtn" class="llm-btn" data-i18n="llm_analyze">LLM 智能分析</button>
             <div id="llmNote" class="llm-result-note"></div>
           </details>
         </div>
@@ -172,6 +173,34 @@
           data-i18n-placeholder="search_placeholder" placeholder="搜索语法点…">
       </div>
       <div id="grammarList" class="grammar-list"></div>
+    </section>
+
+    <!-- ═══ PAGE: History ═══ -->
+    <section id="page-history" class="page">
+      <div class="hero">
+        <h1 class="hero-title" data-i18n="history_title">史笺 · 分析历史</h1>
+        <p class="hero-desc" data-i18n="history_subtitle">本页所有数据保存在浏览器本地，不会上传至云端</p>
+      </div>
+
+      <!-- Privacy notice -->
+      <div class="cloud-notice">
+        <span data-i18n="history_cloud_note">🔒 隐私提示：历史记录仅存储在您的浏览器本地（localStorage），不会同步到任何云端服务器。清除浏览器数据可能导致记录丢失。</span>
+      </div>
+
+      <!-- History header -->
+      <div class="history-header-bar">
+        <span class="history-count-label" data-i18n="match_count">语法点数量</span>
+        <span id="historyCount" class="history-count-val">0</span>
+        <button id="historyClearBtn" class="history-clear-btn" data-i18n="history_clear">清空历史</button>
+      </div>
+
+      <!-- Empty state -->
+      <div id="historyEmpty" class="history-empty hidden">
+        <div class="no-data" data-i18n="history_empty">暂无分析历史</div>
+      </div>
+
+      <!-- History list -->
+      <div id="historyList" class="history-list"></div>
     </section>
 
     <!-- ═══ PAGE: Stats ═══ -->
