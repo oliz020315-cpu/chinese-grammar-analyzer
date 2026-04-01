@@ -57,13 +57,15 @@
       llm_note: '配置 OpenAI 兼容 API 以获得更全面的语法识别',
       llm_api_key: 'API Key',
       llm_endpoint: 'API 地址',
-      llm_model: '模型',
       llm_analyze: 'LLM 智能分析',
       llm_placeholder_key: 'sk-...',
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
-      llm_placeholder_model: 'gpt-4o-mini',
       llm_security_title: '安全提示',
       llm_security: 'API Key 仅存储在您的浏览器本地（base64 编码），不会上传到任何服务器。他人无法通过网络获取您的 Key，但需注意：①浏览器开发者工具可解码查看 ②共享/公共设备上其他用户可能访问。使用完毕后建议点击下方「清除 API Key」。',
+      llm_test: '🔌 测试连接',
+      llm_test_success: '✅ 连接成功！API 可正常使用。',
+      llm_test_fail: '❌ 连接失败：{msg}',
+      llm_test_empty: '⚠️ 请先填写 API Key 和 API 地址',
       llm_clear: '🗑️ 清除 API Key（分析历史不受影响）',
       analyzing: '分析中…',
       toast_analyzing: '🔍 正在分析文本…',
@@ -126,13 +128,15 @@
       llm_note: 'Configure an OpenAI-compatible API for comprehensive grammar identification',
       llm_api_key: 'API Key',
       llm_endpoint: 'Endpoint',
-      llm_model: 'Model',
       llm_analyze: 'LLM Smart Analyze',
       llm_placeholder_key: 'sk-...',
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
-      llm_placeholder_model: 'gpt-4o-mini',
       llm_security_title: 'Security',
       llm_security: 'Your API Key is stored locally in your browser (base64 encoded) and is never sent to any server. No one on the network can access your Key. However: ① Browser DevTools can decode and view it ② Other users on shared/public devices may access it. Consider clicking "Clear API Key" below after use.',
+      llm_test: '🔌 Test Connection',
+      llm_test_success: '✅ Connection successful! API is ready to use.',
+      llm_test_fail: '❌ Connection failed: {msg}',
+      llm_test_empty: '⚠️ Please fill in API Key and Endpoint first',
       llm_clear: '🗑️ Clear API Key (history kept)',
       analyzing: 'Analyzing…',
       toast_analyzing: '🔍 Analyzing text…',
@@ -213,10 +217,8 @@
       const rawKey = localStorage.getItem('moxi_llm_key') || '';
       const savedKey = rawKey ? decodeURIComponent(escape(atob(rawKey))) : '';
       const savedEndpoint = localStorage.getItem('moxi_llm_endpoint') || '';
-      const savedModel = localStorage.getItem('moxi_llm_model') || '';
       document.getElementById('llmApiKey').value = savedKey;
       document.getElementById('llmEndpoint').value = savedEndpoint;
-      document.getElementById('llmModel').value = savedModel;
     } catch (e) {
       // Silent fail — don't log errors that might reveal key info
     }
@@ -231,14 +233,12 @@
   function saveLLMConfig() {
     const key = document.getElementById('llmApiKey').value.trim();
     const endpoint = document.getElementById('llmEndpoint').value.trim();
-    const model = document.getElementById('llmModel').value.trim();
     // SECURITY NOTE: localStorage is client-side storage.
     // Base64 encoding is NOT encryption — it only prevents casual shoulder-surfing.
     // For real security, users should clear the key after each session.
     try {
       localStorage.setItem('moxi_llm_key', key ? btoa(unescape(encodeURIComponent(key))) : '');
       localStorage.setItem('moxi_llm_endpoint', endpoint);
-      localStorage.setItem('moxi_llm_model', model);
     } catch (e) {
       // Do NOT log the error message — it might leak key-related info to console
       // localStorage might be full or disabled — degrade silently
@@ -389,6 +389,51 @@
     document.getElementById('analyzeBtn').addEventListener('click', runUnifiedAnalysis);
     document.getElementById('exportCSV').addEventListener('click', exportCSV);
 
+    // Bind LLM connection test button
+    const testBtn = document.getElementById('llmTestBtn');
+    if (testBtn) {
+      testBtn.addEventListener('click', async () => {
+        const isZh = currentLang === 'zh';
+        const key = document.getElementById('llmApiKey').value.trim();
+        const endpoint = document.getElementById('llmEndpoint').value.trim();
+        if (!key || !endpoint) {
+          showToast(I18N[isZh ? 'zh' : 'en'].llm_test_empty);
+          return;
+        }
+        const originalText = testBtn.textContent;
+        testBtn.textContent = isZh ? '⏳ 测试中…' : '⏳ Testing…';
+        testBtn.disabled = true;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            showToast(I18N[isZh ? 'zh' : 'en'].llm_test_success);
+          } else {
+            let msg = `HTTP ${res.status}`;
+            if (res.status === 401) msg = isZh ? 'API Key 无效或已过期' : 'Invalid or expired API Key';
+            else if (res.status === 429) msg = isZh ? '请求频率过高' : 'Rate limited';
+            else if (res.status === 404) msg = isZh ? 'API 地址不存在' : 'Endpoint not found';
+            showToast(I18N[isZh ? 'zh' : 'en'].llm_test_fail.replace('{msg}', msg));
+          }
+        } catch (e) {
+          const msg = e.name === 'AbortError'
+            ? (isZh ? '连接超时（15s）' : 'Connection timeout (15s)')
+            : (isZh ? '网络连接失败' : 'Network error');
+          showToast(I18N[isZh ? 'zh' : 'en'].llm_test_fail.replace('{msg}', msg));
+        } finally {
+          testBtn.textContent = originalText;
+          testBtn.disabled = false;
+        }
+      });
+    }
+
     // Bind LLM clear button — only clears API config, never touches pure local analysis history
     const clearBtn = document.getElementById('llmClearBtn');
     if (clearBtn) {
@@ -409,11 +454,9 @@
         // 1. Clear API config (always)
         document.getElementById('llmApiKey').value = '';
         document.getElementById('llmEndpoint').value = '';
-        document.getElementById('llmModel').value = '';
         try {
           localStorage.removeItem('moxi_llm_key');
           localStorage.removeItem('moxi_llm_endpoint');
-          localStorage.removeItem('moxi_llm_model');
         } catch (e) { /* silent */ }
         analyzer.configureLLM(null);
 

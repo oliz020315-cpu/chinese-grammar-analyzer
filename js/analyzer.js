@@ -100,7 +100,10 @@ class GrammarAnalyzer {
       // ─── 助词 ───
       {pattern: /[\u4e00-\u9fff]{1,6}的[\u4e00-\u9fff]{0,4}/g, level: 1, desc_zh: '结构助词（…的…）', desc_en: 'Structural particle (…的…)'},
       {pattern: /[\u4e00-\u9fff]+地[\u4e00-\u9fff]+/g, level: 2, desc_zh: '结构助词（…地…）', desc_en: 'Structural particle (…地…)'},
-      {pattern: /[\u4e00-\u9fff]+得[\u4e00-\u9fff]+/g, level: 3, desc_zh: '程度/状态补语（…得…）', desc_en: 'Degree/state complement (…得…)'},
+      {pattern: /[\u4e00-\u9fff]+得(?!并不)[\u4e00-\u9fff]+/g, level: 3, desc_zh: '程度/状态补语（…得…）', desc_en: 'Degree/state complement (…得…)'}
+
+      // ─── 简单并列结构 ───
+      {pattern: /[\u4e00-\u9fff]{2,6}并[\u4e00-\u9fff]{2,6}/g, level: 3, desc_zh: '并列结构（A并B）', desc_en: 'Coordinating structure (A and B)'},
       {pattern: /了(?=[。！？\u4e00])/g, level: 1, desc_zh: '动态助词（了₁）', desc_en: 'Aspect particle (了₁)'},
       {pattern: /[\u4e00-\u9fff]+着[\u4e00-\u9fff]*/g, level: 3, desc_zh: '持续体（V着…）', desc_en: 'Durative aspect (V着…)'},
       {pattern: /[\u4e00-\u9fff]+过[\u4e00-\u9fff]*/g, level: 2, desc_zh: '经历体（V过…）', desc_en: 'Experiential aspect (V过…)'},
@@ -180,7 +183,7 @@ class GrammarAnalyzer {
       {pattern: /一下/g, level: 2, desc_zh: '动量补语（一下）', desc_en: 'Frequency complement (一下)'},
 
       // ─── "得"字补语初步 ───
-      {pattern: /[\u4e00-\u9fff]得[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '程度补语初步', desc_en: 'Degree complement (basic)'},
+      {pattern: /[\u4e00-\u9fff]得(?!并不)[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '程度补语初步', desc_en: 'Degree complement (basic)'},
 
       // ═══════════════════════════════════════════════════════════════
       // Level 3 — 中级 Intermediate (HSK 3-4)

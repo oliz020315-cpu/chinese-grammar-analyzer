@@ -735,7 +735,28 @@ body {
 }
 .llm-actions {
   margin-top: 0.6rem;
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.llm-test-btn {
+  background: none;
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold-dark);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-serif);
+}
+.llm-test-btn:hover:not(:disabled) {
+  border-color: var(--accent-gold-dark);
+  background: var(--paper-warm);
+}
+.llm-test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .llm-clear-btn {
   background: none;
