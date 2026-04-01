@@ -54,7 +54,9 @@
       points_unit: '个语法点',
       export_csv: '📄 导出 CSV',
       llm_title: '🤖 LLM 辅助分析',
-      llm_note: '配置 OpenAI 兼容 API 以获得更全面的语法识别',
+      llm_note: '配置 OpenAI 兼容 API 以获得更全面的语法识别。启用后点击上方「开始分析」将自动使用 LLM 辅助。',
+      llm_enable: '启用 LLM 增强',
+      llm_help: '💡 支持所有 OpenAI 兼容 API（如 OpenAI、DeepSeek、Moonshot、通义千问、GLM 等）。API Key 可在对应平台后台获取。',
       llm_api_key: 'API Key',
       llm_endpoint: 'API 地址',
       llm_analyze: 'LLM 智能分析',
@@ -62,11 +64,21 @@
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
       llm_security_title: '安全提示',
       llm_security: 'API Key 仅存储在您的浏览器本地（base64 编码），不会上传到任何服务器。他人无法通过网络获取您的 Key，但需注意：①浏览器开发者工具可解码查看 ②共享/公共设备上其他用户可能访问。使用完毕后建议点击下方「清除 API Key」。',
+      llm_save: '💾 保存配置',
       llm_test: '🔌 测试连接',
       llm_test_success: '✅ 连接成功！API 可正常使用。',
       llm_test_fail: '❌ 连接失败：{msg}',
       llm_test_empty: '⚠️ 请先填写 API Key 和 API 地址',
-      llm_clear: '🗑️ 清除 API Key（分析历史不受影响）',
+      llm_clear: '🗑️ 清除配置',
+      llm_show_advanced: '⚙️ 显示高级选项',
+      llm_hide_advanced: '⚙️ 隐藏高级选项',
+      llm_custom_template: '自定义请求体模板（可选，留空使用 OpenAI 格式）',
+      llm_template_placeholder: '{"prompt": "请分析以下文本的语法点：{{text}}", "max_tokens": 500}',
+      llm_response_path: '响应解析路径（可选，留空使用 choices[0].message.content）',
+      llm_response_placeholder: 'choices[0].message.content',
+      llm_config_saved: '✅ 配置已保存',
+      llm_config_cleared: '🗑️ 配置已清除，LLM 增强已禁用',
+      llm_analyzing: '🤖 正在调用 LLM 分析…',
       analyzing: '分析中…',
       toast_analyzing: '🔍 正在分析文本…',
       toast_local_done: '✅ 本地分析完成，识别到 {n} 处语法点',
@@ -125,7 +137,9 @@
       points_unit: 'points',
       export_csv: '📄 Export CSV',
       llm_title: '🤖 LLM-Assisted Analysis',
-      llm_note: 'Configure an OpenAI-compatible API for comprehensive grammar identification',
+      llm_note: 'Configure an OpenAI-compatible API for comprehensive grammar identification. Enable to auto-use LLM when analyzing.',
+      llm_enable: 'Enable LLM Enhancement',
+      llm_help: '💡 Supports all OpenAI-compatible APIs (OpenAI, DeepSeek, Moonshot, Qwen, GLM, etc.). Get your API Key from the platform dashboard.',
       llm_api_key: 'API Key',
       llm_endpoint: 'Endpoint',
       llm_analyze: 'LLM Smart Analyze',
@@ -133,11 +147,21 @@
       llm_placeholder_endpoint: 'https://api.openai.com/v1/chat/completions',
       llm_security_title: 'Security',
       llm_security: 'Your API Key is stored locally in your browser (base64 encoded) and is never sent to any server. No one on the network can access your Key. However: ① Browser DevTools can decode and view it ② Other users on shared/public devices may access it. Consider clicking "Clear API Key" below after use.',
+      llm_save: '💾 Save Config',
       llm_test: '🔌 Test Connection',
       llm_test_success: '✅ Connection successful! API is ready to use.',
       llm_test_fail: '❌ Connection failed: {msg}',
       llm_test_empty: '⚠️ Please fill in API Key and Endpoint first',
-      llm_clear: '🗑️ Clear API Key (history kept)',
+      llm_clear: '🗑️ Clear Config',
+      llm_show_advanced: '⚙️ Show Advanced Options',
+      llm_hide_advanced: '⚙️ Hide Advanced Options',
+      llm_custom_template: 'Custom request body template (optional, leave blank for OpenAI format)',
+      llm_template_placeholder: '{"prompt": "Analyze grammar points: {{text}}", "max_tokens": 500}',
+      llm_response_path: 'Response parsing path (optional, leave blank for choices[0].message.content)',
+      llm_response_placeholder: 'choices[0].message.content',
+      llm_config_saved: '✅ Configuration saved',
+      llm_config_cleared: '🗑️ Configuration cleared, LLM enhancement disabled',
+      llm_analyzing: '🤖 Calling LLM for analysis…',
       analyzing: 'Analyzing…',
       toast_analyzing: '🔍 Analyzing text…',
       toast_local_done: '✅ Local analysis complete: {n} grammar points found',
@@ -217,33 +241,79 @@
       const rawKey = localStorage.getItem('moxi_llm_key') || '';
       const savedKey = rawKey ? decodeURIComponent(escape(atob(rawKey))) : '';
       const savedEndpoint = localStorage.getItem('moxi_llm_endpoint') || '';
+      const savedEnabled = localStorage.getItem('moxi_llm_enabled') === 'true';
+      const savedTemplate = localStorage.getItem('moxi_llm_template') || '';
+      const savedRespPath = localStorage.getItem('moxi_llm_resp_path') || '';
+
       document.getElementById('llmApiKey').value = savedKey;
       document.getElementById('llmEndpoint').value = savedEndpoint;
+      document.getElementById('llmEnabled').checked = savedEnabled;
+      document.getElementById('llmCustomTemplate').value = savedTemplate;
+      document.getElementById('llmResponsePath').value = savedRespPath;
+
+      // Toggle config fields visibility
+      _toggleLLMFields(savedEnabled);
+
+      // If enabled + has config, configure analyzer immediately
+      if (savedEnabled && savedKey && savedEndpoint) {
+        analyzer.configureLLM({
+          apiKey: savedKey,
+          endpoint: savedEndpoint,
+          model: 'gpt-4o-mini',
+          customTemplate: savedTemplate || null,
+          responsePath: savedRespPath || null
+        });
+      }
     } catch (e) {
       // Silent fail — don't log errors that might reveal key info
     }
   }
 
+  function _toggleLLMFields(enabled) {
+    const fields = document.getElementById('llmConfigFields');
+    if (fields) {
+      fields.classList.toggle('hidden', !enabled);
+    }
+  }
+
   function hasLLMConfig() {
+    const enabled = document.getElementById('llmEnabled').checked;
     const key = document.getElementById('llmApiKey').value.trim();
     const endpoint = document.getElementById('llmEndpoint').value.trim();
-    return !!(key && endpoint);
+    return enabled && !!(key && endpoint);
   }
 
   function saveLLMConfig() {
     const key = document.getElementById('llmApiKey').value.trim();
     const endpoint = document.getElementById('llmEndpoint').value.trim();
+    const enabled = document.getElementById('llmEnabled').checked;
+    const customTemplate = document.getElementById('llmCustomTemplate').value.trim();
+    const responsePath = document.getElementById('llmResponsePath').value.trim();
+
     // SECURITY NOTE: localStorage is client-side storage.
     // Base64 encoding is NOT encryption — it only prevents casual shoulder-surfing.
     // For real security, users should clear the key after each session.
     try {
       localStorage.setItem('moxi_llm_key', key ? btoa(unescape(encodeURIComponent(key))) : '');
       localStorage.setItem('moxi_llm_endpoint', endpoint);
+      localStorage.setItem('moxi_llm_enabled', String(enabled));
+      localStorage.setItem('moxi_llm_template', customTemplate);
+      localStorage.setItem('moxi_llm_resp_path', responsePath);
     } catch (e) {
       // Do NOT log the error message — it might leak key-related info to console
       // localStorage might be full or disabled — degrade silently
     }
-    analyzer.configureLLM({ apiKey: key, endpoint, model: model || 'gpt-4o-mini' });
+    if (enabled && key && endpoint) {
+      analyzer.configureLLM({
+        apiKey: key,
+        endpoint,
+        model: 'gpt-4o-mini',
+        customTemplate: customTemplate || null,
+        responsePath: responsePath || null
+      });
+    } else {
+      analyzer.configureLLM(null);
+    }
   }
 
   // ── Ink Canvas Background ─────────────────────────────
@@ -389,6 +459,38 @@
     document.getElementById('analyzeBtn').addEventListener('click', runUnifiedAnalysis);
     document.getElementById('exportCSV').addEventListener('click', exportCSV);
 
+    // Bind LLM enable toggle — show/hide config fields
+    const enableCheckbox = document.getElementById('llmEnabled');
+    if (enableCheckbox) {
+      enableCheckbox.addEventListener('change', () => {
+        const enabled = enableCheckbox.checked;
+        _toggleLLMFields(enabled);
+        if (!enabled) {
+          // Immediately disable LLM on analyzer
+          analyzer.configureLLM(null);
+        }
+      });
+    }
+
+    // Bind LLM save button
+    const saveBtn = document.getElementById('llmSaveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        saveLLMConfig();
+        showToast(I18N[currentLang].llm_config_saved);
+      });
+    }
+
+    // Bind LLM advanced options toggle
+    const advToggle = document.getElementById('llmAdvancedToggle');
+    if (advToggle) {
+      advToggle.addEventListener('click', () => {
+        const advFields = document.getElementById('llmAdvancedFields');
+        const isHidden = advFields.classList.toggle('hidden');
+        advToggle.textContent = I18N[currentLang][isHidden ? 'llm_show_advanced' : 'llm_hide_advanced'];
+      });
+    }
+
     // Bind LLM connection test button
     const testBtn = document.getElementById('llmTestBtn');
     if (testBtn) {
@@ -434,7 +536,7 @@
       });
     }
 
-    // Bind LLM clear button — only clears API config, never touches pure local analysis history
+    // Bind LLM clear button — clears API config, advanced options, and disable toggle
     const clearBtn = document.getElementById('llmClearBtn');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
@@ -446,17 +548,24 @@
           // User has LLM-assisted history records — ask if they want to also remove those
           alsoClearHistory = confirm(
             isZh
-              ? '⚠️ 您的 API Key 即将被清除。\n\n检测到存在 LLM 辅助分析的历史记录，是否一并删除？\n\n• 点击「确定」= 清除 API Key，同时删除这些 LLM 分析记录\n• 点击「取消」= 仅清除 API Key，所有分析历史保持不变'
-              : '⚠️ Your API Key is about to be cleared.\n\nLLM-assisted analysis history detected. Also remove these records?\n\n• Click "OK" = Clear API Key AND remove these LLM records\n• Click "Cancel" = Clear API Key ONLY, all history stays'
+              ? '⚠️ 您的 LLM 配置即将被清除。\n\n检测到存在 LLM 辅助分析的历史记录，是否一并删除？\n\n• 点击「确定」= 清除所有配置，同时删除这些 LLM 分析记录\n• 点击「取消」= 仅清除配置，所有分析历史保持不变'
+              : '⚠️ Your LLM config is about to be cleared.\n\nLLM-assisted analysis history detected. Also remove these records?\n\n• Click "OK" = Clear config AND remove LLM records\n• Click "Cancel" = Clear config ONLY, all history stays'
           );
         }
 
-        // 1. Clear API config (always)
+        // 1. Clear all API config (always)
         document.getElementById('llmApiKey').value = '';
         document.getElementById('llmEndpoint').value = '';
+        document.getElementById('llmEnabled').checked = false;
+        document.getElementById('llmCustomTemplate').value = '';
+        document.getElementById('llmResponsePath').value = '';
+        _toggleLLMFields(false);
         try {
           localStorage.removeItem('moxi_llm_key');
           localStorage.removeItem('moxi_llm_endpoint');
+          localStorage.removeItem('moxi_llm_enabled');
+          localStorage.removeItem('moxi_llm_template');
+          localStorage.removeItem('moxi_llm_resp_path');
         } catch (e) { /* silent */ }
         analyzer.configureLLM(null);
 
@@ -468,11 +577,11 @@
             history = history.filter(h => !h.llmUsed);
             localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
             showToast(isZh
-              ? `🗑️ API Key 已清除，同时删除了 ${llmCount} 条 LLM 分析记录`
-              : `🗑️ API Key cleared, ${llmCount} LLM records removed`);
+              ? `🗑️ 配置已清除，同时删除了 ${llmCount} 条 LLM 分析记录`
+              : `🗑️ Config cleared, ${llmCount} LLM records removed`);
           } catch (e) { /* silent */ }
         } else {
-          showToast(isZh ? '🗑️ API Key 已清除（分析历史已保留）' : '🗑️ API Key cleared (history kept)');
+          showToast(I18N[currentLang].llm_config_cleared);
         }
       });
     }
@@ -493,19 +602,22 @@
     btn.disabled = true;
     btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent = I18N[currentLang].analyzing;
-    showToast(I18N[currentLang].toast_analyzing);
 
     let result;
     try {
       if (hasLLMConfig()) {
         // Has API config → use LLM-assisted analysis
         saveLLMConfig();
+        showToast(I18N[currentLang].llm_analyzing);
         result = await analyzer.analyzeWithLLM(text, currentLang);
         if (result.llmUsed) {
           showToast(I18N[currentLang].toast_llm_done.replace('{n}', result.matches.length));
         } else {
           // LLM failed, fell back to local
           showToast(I18N[currentLang].toast_llm_fail);
+          if (result.llmNote) {
+            showToast(result.llmNote, 5000);
+          }
         }
       } else {
         // No API config → local analysis only

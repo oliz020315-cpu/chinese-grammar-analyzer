@@ -775,6 +775,136 @@ body {
   background: var(--accent-red-light);
 }
 
+/* --- LLM Toggle Switch --- */
+.llm-toggle-row {
+  margin: 0.6rem 0;
+}
+.llm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+.llm-toggle input {
+  display: none;
+}
+.llm-toggle-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--ink-faint);
+  border-radius: 11px;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+.llm-toggle input:checked + .llm-toggle-track {
+  background: var(--accent-gold);
+}
+.llm-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.llm-toggle input:checked + .llm-toggle-track .llm-toggle-thumb {
+  transform: translateX(18px);
+}
+.llm-toggle-text {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: var(--ink-dark);
+}
+
+/* --- LLM Config Fields (collapsible) --- */
+.llm-config-fields {
+  margin-top: 0.3rem;
+}
+.llm-config-fields.hidden {
+  display: none;
+}
+
+/* --- LLM Help Text --- */
+.llm-help {
+  font-size: 0.78rem;
+  color: var(--ink-mid);
+  margin: 0.4rem 0 0.6rem;
+  line-height: 1.6;
+  background: var(--paper-warm);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent-gold);
+}
+
+/* --- LLM Save Button --- */
+.llm-save-btn {
+  background: var(--accent-gold);
+  border: none;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-serif);
+}
+.llm-save-btn:hover:not(:disabled) {
+  background: var(--accent-gold-dark);
+}
+.llm-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- LLM Advanced Options --- */
+.llm-advanced {
+  margin-top: 0.8rem;
+}
+.llm-advanced-toggle {
+  font-size: 0.78rem;
+  color: var(--ink-mid);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.llm-advanced-toggle:hover {
+  color: var(--ink-dark);
+}
+.llm-advanced-fields {
+  margin-top: 0.6rem;
+}
+.llm-advanced-fields.hidden {
+  display: none;
+}
+.llm-textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--paper-deep);
+  border-radius: var(--radius);
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  background: var(--paper-warm);
+  color: var(--ink-dark);
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+.llm-textarea:focus {
+  border-color: var(--accent-red);
+}
+.llm-label-gap {
+  margin-top: 0.8rem !important;
+}
+
 /* --- Toast Notifications --- */
 .toast-container {
   position: fixed;

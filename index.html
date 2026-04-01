@@ -84,22 +84,54 @@
         <div class="llm-panel">
           <details>
             <summary data-i18n="llm_title">🤖 LLM 辅助分析</summary>
-            <p class="llm-note" data-i18n="llm_note">配置 OpenAI 兼容 API 以获得更全面的语法识别。填写后点击上方「开始分析」将自动使用 LLM 辅助。</p>
-            <div class="llm-security-note">
-              🔒 <span data-i18n="llm_security_title">安全提示</span>
-              <span class="llm-security-detail" data-i18n="llm_security">API Key 仅存储在您的浏览器本地（base64 编码），不会上传到任何服务器。他人无法通过网络获取您的 Key，但需注意：①浏览器开发者工具可解码查看 ②共享/公共设备上其他用户可能访问。使用完毕后建议点击下方「清除 API Key」。</span>
+            <p class="llm-note" data-i18n="llm_note">配置 OpenAI 兼容 API 以获得更全面的语法识别。启用后点击上方「开始分析」将自动使用 LLM 辅助。</p>
+
+            <!-- Enable toggle -->
+            <div class="llm-toggle-row">
+              <label class="llm-toggle" for="llmEnabled">
+                <input type="checkbox" id="llmEnabled">
+                <span class="llm-toggle-track"><span class="llm-toggle-thumb"></span></span>
+                <span class="llm-toggle-text" data-i18n="llm_enable">启用 LLM 增强</span>
+              </label>
             </div>
-            <div class="llm-fields">
-              <input type="password" id="llmApiKey" class="llm-input" autocomplete="off" data-i18n-placeholder="llm_placeholder_key" placeholder="sk-...">
-              <label class="llm-label" data-i18n="llm_api_key">API Key</label>
-              <input type="url" id="llmEndpoint" class="llm-input" data-i18n-placeholder="llm_placeholder_endpoint" placeholder="https://api.openai.com/v1/chat/completions">
-              <label class="llm-label" data-i18n="llm_endpoint">API 地址</label>
+
+            <!-- Config fields (visible when enabled) -->
+            <div id="llmConfigFields" class="llm-config-fields hidden">
+              <!-- Security notice -->
+              <div class="llm-security-note">
+                🔒 <span data-i18n="llm_security_title">安全提示</span>
+                <span class="llm-security-detail" data-i18n="llm_security">API Key 仅存储在您的浏览器本地（base64 编码），不会上传到任何服务器。他人无法通过网络获取您的 Key，但需注意：①浏览器开发者工具可解码查看 ②共享/公共设备上其他用户可能访问。使用完毕后建议点击下方「清除 API Key」。</span>
+              </div>
+
+              <!-- Help text -->
+              <p class="llm-help" data-i18n="llm_help">💡 支持所有 OpenAI 兼容 API（如 OpenAI、DeepSeek、Moonshot、通义千问、GLM 等）。API Key 可在对应平台后台获取。</p>
+
+              <div class="llm-fields">
+                <input type="password" id="llmApiKey" class="llm-input" autocomplete="off" data-i18n-placeholder="llm_placeholder_key" placeholder="sk-...">
+                <label class="llm-label" data-i18n="llm_api_key">API Key</label>
+                <input type="url" id="llmEndpoint" class="llm-input" data-i18n-placeholder="llm_placeholder_endpoint" placeholder="https://api.openai.com/v1/chat/completions">
+                <label class="llm-label" data-i18n="llm_endpoint">API 地址</label>
+              </div>
+
+              <div class="llm-actions">
+                <button id="llmSaveBtn" class="llm-save-btn" data-i18n="llm_save">💾 保存配置</button>
+                <button id="llmTestBtn" class="llm-test-btn" data-i18n="llm_test">🔌 测试连接</button>
+                <button id="llmClearBtn" class="llm-clear-btn" data-i18n="llm_clear">🗑️ 清除配置</button>
+              </div>
+
+              <!-- Advanced options (collapsible) -->
+              <div class="llm-advanced">
+                <a href="javascript:void(0)" id="llmAdvancedToggle" class="llm-advanced-toggle" data-i18n="llm_show_advanced">⚙️ 显示高级选项</a>
+                <div id="llmAdvancedFields" class="llm-advanced-fields hidden">
+                  <label class="llm-label" data-i18n="llm_custom_template">自定义请求体模板（可选，留空使用 OpenAI 格式）</label>
+                  <textarea id="llmCustomTemplate" class="llm-textarea" rows="5" data-i18n-placeholder="llm_template_placeholder" placeholder='{"prompt": "请分析以下文本的语法点：{{text}}", "max_tokens": 500}'></textarea>
+                  <label class="llm-label llm-label-gap" data-i18n="llm_response_path">响应解析路径（可选，留空使用 choices[0].message.content）</label>
+                  <input type="text" id="llmResponsePath" class="llm-input" data-i18n-placeholder="llm_response_placeholder" placeholder="choices[0].message.content">
+                </div>
+              </div>
+
+              <div id="llmNote" class="llm-result-note"></div>
             </div>
-            <div class="llm-actions">
-              <button id="llmTestBtn" class="llm-test-btn" data-i18n="llm_test">🔌 测试连接</button>
-              <button id="llmClearBtn" class="llm-clear-btn" data-i18n="llm_clear">🗑️ 清除 API Key（分析历史不受影响）</button>
-            </div>
-            <div id="llmNote" class="llm-result-note"></div>
           </details>
         </div>
       </div>
@@ -233,6 +265,7 @@
   </footer>
 
   <script src="js/grammar-data.js"></script>
+  <script src="js/patterns-config.js"></script>
   <script src="js/analyzer.js"></script>
   <script src="js/app.js"></script>
 </body>
