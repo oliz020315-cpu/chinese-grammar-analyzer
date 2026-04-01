@@ -79,6 +79,8 @@
       llm_config_saved: '✅ 配置已保存',
       llm_config_cleared: '🗑️ 配置已清除，LLM 增强已禁用',
       llm_analyzing: '🤖 正在调用 LLM 分析…',
+      llm_model: '模型名称（可选，留空自动识别）',
+      llm_model_placeholder: '自动识别 / gpt-4o-mini / deepseek-chat',
       analyzing: '分析中…',
       toast_analyzing: '🔍 正在分析文本…',
       toast_local_done: '✅ 本地分析完成，识别到 {n} 处语法点',
@@ -162,6 +164,8 @@
       llm_config_saved: '✅ Configuration saved',
       llm_config_cleared: '🗑️ Configuration cleared, LLM enhancement disabled',
       llm_analyzing: '🤖 Calling LLM for analysis…',
+      llm_model: 'Model name (optional, auto-detect if blank)',
+      llm_model_placeholder: 'Auto-detect / gpt-4o-mini / deepseek-chat',
       analyzing: 'Analyzing…',
       toast_analyzing: '🔍 Analyzing text…',
       toast_local_done: '✅ Local analysis complete: {n} grammar points found',
@@ -236,6 +240,19 @@
   }
 
   // ── LLM Panel Init ────────────────────────────────────
+
+  // Auto-detect model name from endpoint URL
+  function _detectModel(endpoint) {
+    const e = endpoint.toLowerCase();
+    if (e.includes('deepseek')) return 'deepseek-chat';
+    if (e.includes('moonshot') || e.includes('kimi')) return 'moonshot-v1-8k';
+    if (e.includes('qwen') || e.includes('dashscope') || e.includes('aliyun')) return 'qwen-turbo';
+    if (e.includes('glm') || e.includes('zhipu') || e.includes('bigmodel')) return 'glm-4-flash';
+    if (e.includes('yi') || e.includes('01.ai')) return 'yi-lightning';
+    if (e.includes('openai')) return 'gpt-4o-mini';
+    return 'gpt-4o-mini'; // default fallback
+  }
+
   function initLLMPanel() {
     try {
       const rawKey = localStorage.getItem('moxi_llm_key') || '';
@@ -244,22 +261,25 @@
       const savedEnabled = localStorage.getItem('moxi_llm_enabled') === 'true';
       const savedTemplate = localStorage.getItem('moxi_llm_template') || '';
       const savedRespPath = localStorage.getItem('moxi_llm_resp_path') || '';
+      const savedModel = localStorage.getItem('moxi_llm_model') || '';
 
       document.getElementById('llmApiKey').value = savedKey;
       document.getElementById('llmEndpoint').value = savedEndpoint;
       document.getElementById('llmEnabled').checked = savedEnabled;
       document.getElementById('llmCustomTemplate').value = savedTemplate;
       document.getElementById('llmResponsePath').value = savedRespPath;
+      document.getElementById('llmModel').value = savedModel;
 
       // Toggle config fields visibility
       _toggleLLMFields(savedEnabled);
 
       // If enabled + has config, configure analyzer immediately
       if (savedEnabled && savedKey && savedEndpoint) {
+        const model = savedModel || _detectModel(savedEndpoint);
         analyzer.configureLLM({
           apiKey: savedKey,
           endpoint: savedEndpoint,
-          model: 'gpt-4o-mini',
+          model: model,
           customTemplate: savedTemplate || null,
           responsePath: savedRespPath || null
         });
@@ -289,6 +309,7 @@
     const enabled = document.getElementById('llmEnabled').checked;
     const customTemplate = document.getElementById('llmCustomTemplate').value.trim();
     const responsePath = document.getElementById('llmResponsePath').value.trim();
+    const userModel = document.getElementById('llmModel').value.trim();
 
     // SECURITY NOTE: localStorage is client-side storage.
     // Base64 encoding is NOT encryption — it only prevents casual shoulder-surfing.
@@ -299,15 +320,17 @@
       localStorage.setItem('moxi_llm_enabled', String(enabled));
       localStorage.setItem('moxi_llm_template', customTemplate);
       localStorage.setItem('moxi_llm_resp_path', responsePath);
+      localStorage.setItem('moxi_llm_model', userModel);
     } catch (e) {
       // Do NOT log the error message — it might leak key-related info to console
       // localStorage might be full or disabled — degrade silently
     }
     if (enabled && key && endpoint) {
+      const model = userModel || _detectModel(endpoint);
       analyzer.configureLLM({
         apiKey: key,
         endpoint,
-        model: 'gpt-4o-mini',
+        model,
         customTemplate: customTemplate || null,
         responsePath: responsePath || null
       });
@@ -508,10 +531,11 @@
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const model = (document.getElementById('llmModel').value.trim()) || _detectModel(endpoint);
           const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-            body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 }),
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 }),
             signal: controller.signal
           });
           clearTimeout(timeoutId);
@@ -559,6 +583,7 @@
         document.getElementById('llmEnabled').checked = false;
         document.getElementById('llmCustomTemplate').value = '';
         document.getElementById('llmResponsePath').value = '';
+        document.getElementById('llmModel').value = '';
         _toggleLLMFields(false);
         try {
           localStorage.removeItem('moxi_llm_key');
@@ -566,6 +591,7 @@
           localStorage.removeItem('moxi_llm_enabled');
           localStorage.removeItem('moxi_llm_template');
           localStorage.removeItem('moxi_llm_resp_path');
+          localStorage.removeItem('moxi_llm_model');
         } catch (e) { /* silent */ }
         analyzer.configureLLM(null);
 

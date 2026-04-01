@@ -123,7 +123,9 @@
               <div class="llm-advanced">
                 <a href="javascript:void(0)" id="llmAdvancedToggle" class="llm-advanced-toggle" data-i18n="llm_show_advanced">⚙️ 显示高级选项</a>
                 <div id="llmAdvancedFields" class="llm-advanced-fields hidden">
-                  <label class="llm-label" data-i18n="llm_custom_template">自定义请求体模板（可选，留空使用 OpenAI 格式）</label>
+                  <label class="llm-label" data-i18n="llm_model">模型名称（可选，留空自动识别）</label>
+                  <input type="text" id="llmModel" class="llm-input" data-i18n-placeholder="llm_model_placeholder" placeholder="自动识别 / gpt-4o-mini / deepseek-chat">
+                  <label class="llm-label llm-label-gap" data-i18n="llm_custom_template">自定义请求体模板（可选，留空使用 OpenAI 格式）</label>
                   <textarea id="llmCustomTemplate" class="llm-textarea" rows="5" data-i18n-placeholder="llm_template_placeholder" placeholder='{"prompt": "请分析以下文本的语法点：{{text}}", "max_tokens": 500}'></textarea>
                   <label class="llm-label llm-label-gap" data-i18n="llm_response_path">响应解析路径（可选，留空使用 choices[0].message.content）</label>
                   <input type="text" id="llmResponsePath" class="llm-input" data-i18n-placeholder="llm_response_placeholder" placeholder="choices[0].message.content">
