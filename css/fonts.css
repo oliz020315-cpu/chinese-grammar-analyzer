@@ -1,0 +1,46 @@
+/* ========================================
+ * 本地字体声明 —— 无需任何外部 CDN
+ * 字体文件位于 lib/fonts/ 目录
+ * ======================================== */
+
+/* Noto Serif SC - 思源宋体简体 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../lib/fonts/NotoSerifSC-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../lib/fonts/NotoSerifSC-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../lib/fonts/NotoSerifSC-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('../lib/fonts/NotoSerifSC-Black.ttf') format('truetype');
+}
+
+/* ZCOOL XiaoWei - 站酷小薇体 */
+@font-face {
+  font-family: 'ZCOOL XiaoWei';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../lib/fonts/ZCOOLXiaoWei-Regular.ttf') format('truetype');
+}
