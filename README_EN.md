@@ -114,11 +114,19 @@ Model Name: deepseek-chat (auto-detected)
 
 ## 🚢 Deployment
 
-### Static Hosting (Recommended)
-- **GitHub Pages**: Push to `main` branch
-- **Vercel**: Connect GitHub repo for auto-deploy
-- **Netlify**: Drag and drop folder
-- **Tencent Cloud COS**: Static website hosting
+> **If your audience is mainly in Mainland China, do not use GitHub Pages, jsDelivr, or unpkg as the primary production host.** Even when the app code is fine, overseas domains and edge nodes may still cause slow loads, timeouts, or complete inaccessibility.
+
+### Static Hosting (Recommended for Mainland China)
+- **Tencent Cloud CloudBase Static Hosting**: easiest option for a fast launch
+- **Tencent Cloud COS Static Website Hosting**: good for pure static deployment, optionally with CDN
+- **Self-hosted server / Nginx / BT Panel**: most stable for long-term production use
+- **Vercel / Netlify**: suitable as an overseas backup, not recommended as the main Mainland China site
+
+### Pre-release Checklist
+- Upload `css/fonts.css`, `lib/chart.umd.min.js`, and the whole `lib/fonts/` directory together
+- The current version no longer depends on external runtime CDNs
+- A custom Mainland China domain usually requires ICP filing
+
 
 ### Self-hosted Server
 ```nginx
@@ -216,7 +224,8 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 - **Maintainer**: [Your Name]
 - **Issue tracker**: [GitHub Issues](https://github.com/username/chinese-grammar-analyzer/issues)
-- **Documentation**: [https://username.github.io/chinese-grammar-analyzer](https://username.github.io/chinese-grammar-analyzer)
+- **Production URL**: replace this with your actual public site URL (avoid `github.io` as the primary host for Mainland China users)
+
 
 ---
 

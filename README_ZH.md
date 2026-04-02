@@ -114,11 +114,19 @@ API密钥: sk-xxxxxxxxxxxxxxxxxxxxxxxx
 
 ## 🚢 部署指南
 
-### 静态托管（推荐）
-- **GitHub Pages**：直接推送 `main` 分支
-- **Vercel**：连接 GitHub 仓库自动部署
-- **Netlify**：拖拽文件夹上传
-- **腾讯云 COS**：配置静态网站托管
+> **面向中国大陆用户时，不建议把 GitHub Pages、jsDelivr、unpkg 作为主站方案。** 这些平台在不同运营商网络下可能出现打开慢、资源超时甚至无法访问的问题。
+
+### 静态托管（中国大陆推荐）
+- **腾讯云 CloudBase 静态托管**：最省事，适合直接上线演示站
+- **腾讯云 COS 静态网站托管**：适合纯静态部署，可配合 CDN
+- **自有云服务器 / 宝塔 / Nginx**：最稳，适合正式长期使用
+- **Vercel / Netlify**：可作海外备用站，不建议作为大陆主站
+
+### 发布前检查
+- 确保 `css/fonts.css`、`lib/chart.umd.min.js`、`lib/fonts/` 一并上传
+- 当前版本已去除页面运行所需的外部 CDN，支持纯静态部署
+- 若绑定中国大陆自定义域名，通常还需要备案
+
 
 ### 自建服务器
 ```nginx
@@ -216,7 +224,8 @@ MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
 - **项目维护**：[你的名字]
 - **问题反馈**：[GitHub Issues](https://github.com/username/chinese-grammar-analyzer/issues)
-- **文档网站**：[https://username.github.io/chinese-grammar-analyzer](https://username.github.io/chinese-grammar-analyzer)
+- **线上地址**：请替换为你实际可访问的正式地址（若面向中国大陆用户，避免使用 `github.io` 作为主站）
+
 
 ---
 

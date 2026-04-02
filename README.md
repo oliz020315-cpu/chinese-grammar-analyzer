@@ -183,11 +183,19 @@ function _detectModel(endpoint) {
 
 ## 🚢 部署指南
 
+> **如果目标用户主要在中国大陆，不建议把 GitHub Pages、jsDelivr、unpkg 作为主站方案。** 即使代码本身没有问题，域名与境外节点也可能导致访问慢、超时或打不开。
+
 ### 静态托管
-- **GitHub Pages**：直接推送即可部署
-- **Vercel**：`vercel --prod`
-- **Netlify**：拖拽文件夹上传
-- **腾讯云 COS**：配置静态网站托管
+- **腾讯云 CloudBase 静态托管**：最省事，适合快速上线演示
+- **腾讯云 COS 静态网站托管**：适合纯静态站点，可配合 CDN
+- **自建服务器 / 宝塔 / Nginx**：最稳，适合长期正式使用
+- **Vercel / Netlify**：可作为海外备用站，不建议作为大陆主站
+
+### 发布前检查
+- 确保 `css/fonts.css`、`lib/chart.umd.min.js`、`lib/fonts/` 全部随站点一起发布
+- 当前版本已将页面运行依赖全部本地化，可直接静态托管
+- 如需中国大陆自定义域名，通常还需要备案
+
 
 ### 自建服务器
 ```nginx
@@ -278,7 +286,8 @@ server {
 - **项目维护者**：[你的名字]
 - **邮箱**：[你的邮箱]
 - **GitHub**：[@你的用户名](https://github.com/你的用户名)
-- **文档网站**：[https://username.github.io/chinese-grammar-analyzer](https://username.github.io/chinese-grammar-analyzer)
+- **线上地址**：请替换为你的正式可访问地址（若面向中国大陆用户，避免使用 `github.io` 作为主站）
+
 
 ---
 
