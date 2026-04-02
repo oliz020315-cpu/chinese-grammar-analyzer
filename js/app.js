@@ -867,11 +867,13 @@
 
   // ── Charts ────────────────────────────────────────────
   function renderCharts(result) {
-    const levels = [1, 2, 3, 4, 5, 6];
+    const allLevels = Object.keys(LEVEL_NAMES).map(Number).sort((a, b) => a - b);
+    const levels = allLevels.filter(l => (result.levelDistribution[l] || 0) > 0);
+    if (levels.length === 0) return;
     const labels = levels.map(l => LEVEL_NAMES[l] || ('L' + l));
     const data = levels.map(l => result.levelDistribution[l] || 0);
     const colors = levels.map(l => LEVEL_COLORS[l] || '#ccc');
-    const hasData = data.some(d => d > 0);
+    const hasData = true;
 
     Chart.defaults.font.family = "'Noto Serif SC', 'Songti SC', serif";
     Chart.defaults.color = '#4a4a4a';
@@ -1090,9 +1092,10 @@
     const dict = I18N[currentLang];
     const overviewEl = document.getElementById('statsOverview');
     const total = GRAMMAR_DATA.length;
-    const avgPerLevel = (total / 6).toFixed(1);
+    const numLevels = Object.keys(LEVEL_NAMES).length;
+    const avgPerLevel = (total / numLevels).toFixed(1);
     const levelCounts = {};
-    for (let l = 1; l <= 6; l++) levelCounts[l] = 0;
+    Object.keys(LEVEL_NAMES).forEach(l => levelCounts[l] = 0);
     GRAMMAR_DATA.forEach(gp => { if (levelCounts[gp.level] !== undefined) levelCounts[gp.level]++; });
     const maxEntry = Object.entries(levelCounts).sort((a, b) => b[1] - a[1])[0];
     const maxLvl = maxEntry ? maxEntry[0] : '-';
@@ -1117,7 +1120,7 @@
 
     if (statsBarChart) { statsBarChart.destroy(); statsBarChart = null; }
     const ctx = document.getElementById('statsBarChart').getContext('2d');
-    const levels = [1, 2, 3, 4, 5, 6];
+    const levels = Object.keys(LEVEL_NAMES).map(Number).sort((a, b) => a - b);
     statsBarChart = new Chart(ctx, {
       type: 'bar',
       data: {

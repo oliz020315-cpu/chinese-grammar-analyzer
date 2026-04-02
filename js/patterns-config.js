@@ -9,7 +9,7 @@
 
 // ═══════════════════════════════════════════════════════════════
 // BUILT-IN REGEX PATTERNS
-// Each: { pattern: /regex/g, level: 1-6, desc_zh, desc_en }
+// Each: { pattern: /regex/g, level: 1-7, desc_zh, desc_en }
 // ═══════════════════════════════════════════════════════════════
 
 const BUILTIN_PATTERNS = [
