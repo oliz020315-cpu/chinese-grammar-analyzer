@@ -318,6 +318,9 @@ class GrammarAnalyzer {
         // Extract 2-6 char Chinese phrases from examples
         const chunks = ex.match(/[\u4e00-\u9fff]{2,6}/g) || [];
         for (const chunk of chunks) {
+          // Skip trivial phrases that cause false matches
+          if (/^[的得了着过是都在也有就没去来吃喝看做说想好坏多少].{0,1}$/.test(chunk)) continue;
+          if (chunk.length === 2 && /[的得了着过是都在也]/.test(chunk[0]) && !/[好漂亮干净聪明重要简单安全热闹安静冷热忙累开心难过伤心高兴生气害怕担心奇怪特别普通正常]/.test(chunk)) continue;
           if (!(chunk in phrases) || gp.level < phrases[chunk].level) {
             phrases[chunk] = {
               level: gp.level,
@@ -408,8 +411,12 @@ class GrammarAnalyzer {
         let m;
         while ((m = regex.exec(text)) !== null) {
           const matched = m[0];
-          // Skip "得" matches that are actually non-complement words (觉得/懂得/获得 etc.)
-          if (matched.includes('得') && GrammarAnalyzer.NON_COMPLEMENT.some(w => matched.includes(w))) {
+          // Skip "得" matches where "得" is preceded by non-complement words (觉得/懂得/获得 etc.)
+          if (matched.includes('得') && GrammarAnalyzer.NON_COMPLEMENT.some(w => {
+            const deIdx = matched.indexOf('得');
+            // Check if the character before "得" is part of a non-complement word
+            return deIdx > 0 && matched.substring(Math.max(0, deIdx - w.length + 1), deIdx + 1) === w;
+          })) {
             if (matched.length === 0) regex.lastIndex++; continue;
           }
           result.matches.push({

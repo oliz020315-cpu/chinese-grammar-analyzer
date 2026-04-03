@@ -58,7 +58,7 @@ const BUILTIN_PATTERNS = [
   {pattern: /[一二三四五六七八九十百千万两零半][个只条张本位名次间把朵块片双对群批套串碗杯瓶斤公斤米号岁年天月日种位分秒期届][\u4e00-\u9fff]?/g, level: 1, desc_zh: '数量词（数+量词）', desc_en: 'Numeral+classifier'},
 
   // ─── 代词 ───
-  {pattern: /我[们]?|你[们]?|他[们]?|她[们]?|它[们]?/g, level: 1, desc_zh: '人称代词', desc_en: 'Personal pronoun'},
+  {pattern: /我[们]?|你[们]?|(?<!其)他[们]?|她[们]?|它[们]?/g, level: 1, desc_zh: '人称代词', desc_en: 'Personal pronoun'},
   {pattern: /这[个些里样种时候天儿点位边]/g, level: 1, desc_zh: '指示代词（这…）', desc_en: 'Demonstrative (这…)'},
   {pattern: /那[个些里样种时候天儿点位边]/g, level: 1, desc_zh: '指示代词（那…）', desc_en: 'Demonstrative (那…)'},
   {pattern: /别的|有的/g, level: 1, desc_zh: '代词（别的/有的）', desc_en: 'Pronoun (别的/有的)'},
@@ -68,9 +68,11 @@ const BUILTIN_PATTERNS = [
   {pattern: /在[\u4e00-\u9fff]{2,6}(?![的])/g, level: 1, desc_zh: '介词（在+地点/时间）', desc_en: 'Preposition (在+location/time)'},
 
   // ─── 助词 ───
-  {pattern: /[\u4e00-\u9fff]{1,6}的[\u4e00-\u9fff]{0,4}/g, level: 1, desc_zh: '结构助词（…的…）', desc_en: 'Structural particle (…的…)'},
-  {pattern: /(认真|仔细|小心|快速|大声|小声|安静|轻松|高兴|生气|伤心|难过|着急|悄悄|默默|狠狠|使劲|拼命|努力|积极|热情|冷淡|粗暴|温柔|勇敢|大胆|坚决|果断|犹豫|缓慢|轻轻|慢慢|快快|渐渐|逐步|逐一|偷偷|公然|明确|始终|不断|不停|一再|再三|反复|来回)地[\u4e00-\u9fff]{1,8}/g, level: 2, desc_zh: '结构助词（…地…）', desc_en: 'Structural particle (…地…)'},
-  {pattern: /[\u4e00-\u9fff]{1,10}得(?!并不)[\u4e00-\u9fff]{1,10}/g, level: 3, desc_zh: '程度/状态补语（…得…）', desc_en: 'Degree/state complement (…得…)'},
+  // 的字结构：前面是修饰语（2-6字），后面是名词中心语（1-4字）
+  // 排除"好吃/真的/是的/似的/对了/好了/错了/多了"等词语内嵌"的"
+  {pattern: /(这个|那个|我|你|他|她|它|什么|怎么|哪|谁|好看|好听|好玩|好吃|好喝|漂亮|干净|聪明|重要|简单|复杂|新|旧|大|小|高|低|长|短|远|近|快|慢|便宜|贵|安全|危险|热闹|安静|冷|热|忙|累|开心|难过|伤心|高兴|生气|害怕|担心|奇怪|特别|普通|一般|正常|不对|不坏|不错|不好|最|很|非常|太|真|比较|更|一样|不同|各种|所有|一些|这些|那些|很多|很少|很大|很小|几个|几|一|二|三|四|五|六|七|八|九|十|百|千|万|红|白|黑|蓝|绿|黄|红|紫|灰|粉|中国|美国|英国|法国|德国|日本|韩国|北京|上海|广州|深圳|学校|医院|公司|银行|商店|饭店|老师|学生|医生|朋友|同学|妈妈|爸爸|哥哥|姐姐|弟弟|妹妹|先生|女士|小孩|大人|男人|女人|男孩|女孩|书|菜|衣服|水果|茶|水|米饭|面包|车|房子|手机|电脑|电影|音乐|问题|办法|事情|工作|学习|生活|天气|名字|地方|时候|样子|颜色|大小|长短|东西|人们|上次|这次|那次|下次|哪次|红色|白色|黑色|蓝色|绿色|黄色|紫色|灰色|粉色|好看|漂亮|可爱|有趣|无聊|有用|没用|重要|简单|复杂|困难|容易|好吃|好喝|好看|好听|好玩|辛苦|厉害|糟糕|干净|脏|整齐|乱|安静|吵|高兴|难过|伤心|开心|生气|害怕|担心|着急|奇怪|满意|不满|舒服|不舒服|冷|热|凉|暖|酸|甜|苦|辣|咸|香|臭)[的][\u4e00-\u9fff]{1,4}/g, level: 1, desc_zh: '结构助词（…的…）', desc_en: 'Structural particle (…的…)'},
+  // 得字补语：前面不能是非补语词（觉得/懂得/晓得/获得/取得/赢得/记得/值得/懒得/免得/博得/晓得/使得/显得/取得/赢得/舍得/忍不住/忍不住/要得），前面必须是动词/形容词
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff])得[\u4e00-\u9fff]{1,10}/g, level: 3, desc_zh: '程度/状态补语（…得…）', desc_en: 'Degree/state complement (…得…)'},
 
   // ─── 简单并列结构 ───
   {pattern: /[\u4e00-\u9fff]{2,6}并[\u4e00-\u9fff]{2,6}/g, level: 3, desc_zh: '并列结构（A并B）', desc_en: 'Coordinating structure (A and B)'},
@@ -157,8 +159,10 @@ const BUILTIN_PATTERNS = [
   {pattern: /一下/g, level: 2, desc_zh: '动量补语（一下）', desc_en: 'Frequency complement (一下)'},
 
   // ─── "得"字补语初步 ───
-  {pattern: /[\u4e00-\u9fff]{1,6}得(?!并不)[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '程度补语初步', desc_en: 'Degree complement (basic)'},
-  {pattern: /[\u4e00-\u9fff]{1,4}[到见完好坏错对住懂透明白清楚干净走跑开]/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+  // 使用 negative lookbehind 排除非补语词
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff])得(?!并不)[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '程度补语初步', desc_en: 'Degree complement (basic)'},
+  // 结果补语：V+结果词（不含"好"，因为"好吃/好看"是形容词不是结果补语）
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
   {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '方式副词（看起来/看上去）', desc_en: 'Manner adverb (看起来/看上去)'},
   {pattern: /一般来说|总的来说|现在看来/g, level: 3, desc_zh: '方式副词（一般来说）', desc_en: 'Manner adverb (一般来说)'},
   {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '情态副词（看起来）', desc_en: 'Modal adverb (看起来)'},
@@ -218,15 +222,19 @@ const BUILTIN_PATTERNS = [
   {pattern: /被[\u4e00-\u9fff]{1,10}给/g, level: 3, desc_zh: '被……给', desc_en: '被…给 (Passive with 给)'},
 
   // ─── 程度 / 结果补语 ───
-  {pattern: /得[\u4e00-\u9fff]{1,12}[好快慢对错清楚漂亮干净厉害糟糕辛苦轻松]/g, level: 3, desc_zh: '程度补语（V+得+adj）', desc_en: 'Degree complement (V+得+adj)'},
-  {pattern: /得[\u4e00-\u9fff；，]{1,8}[很非常太真]/g, level: 3, desc_zh: '程度补语（V+得+程度副词）', desc_en: 'Degree complement (V+得+degree)'},
+  // 排除非补语词前缀（觉得→得不是补语标记）
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])得[\u4e00-\u9fff]{1,12}[好快慢对错清楚漂亮干净厉害糟糕辛苦轻松]/g, level: 3, desc_zh: '程度补语（V+得+adj）', desc_en: 'Degree complement (V+得+adj)'},
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])得[\u4e00-\u9fff；，]{1,8}[很非常太真]/g, level: 3, desc_zh: '程度补语（V+得+程度副词）', desc_en: 'Degree complement (V+得+degree)'},
 
   // ─── 趋向补语 ───
-  {pattern: /[\u4e00-\u9fff]{1,4}出来|[\u4e00-\u9fff]{1,4}进去|[\u4e00-\u9fff]{1,4}上去|[\u4e00-\u9fff]{1,4}下来|[\u4e00-\u9fff]{1,4}过来|[\u4e00-\u9fff]{1,4}过去|[\u4e00-\u9fff]{1,4}起来|[\u4e00-\u9fff]{1,4}回来|[\u4e00-\u9fff]{1,4}回去/g, level: 3, desc_zh: '趋向补语', desc_en: 'Directional complement'},
+  // 动词+趋向词。排除"其他""尤其""一起"等组合
+  {pattern: /(?<!一)(?<![其])(?<=[\u4e00-\u9fff]{2,4})(出来|进去|上去|下来|过来|过去|起来|回来|回去)/g, level: 3, desc_zh: '趋向补语', desc_en: 'Directional complement'},
+  // 单字动词+趋向补语
+  {pattern: /(?<![其一二三四五六七八九十])(?<=[\u4e00-\u9fff])(出来|进去|上去|下来|回来|回去)(?![\u4e00-\u9fff])/g, level: 3, desc_zh: '趋向补语', desc_en: 'Directional complement'},
 
   // ─── 结果补语 ───
   {pattern: /到[\u4e00-\u9fff]{1,10}了/g, level: 3, desc_zh: '结果补语（…到…了）', desc_en: 'Result complement (…到…了)'},
-  {pattern: /[\u4e00-\u9fff]{1,3}[到见完好坏错对住懂透明白清楚干净走跑开]/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
 
   // ─── 口语格式（中级） ───
   {pattern: /不了[了]/g, level: 3, desc_zh: '口语格式（…不了了）', desc_en: 'Spoken format'},
