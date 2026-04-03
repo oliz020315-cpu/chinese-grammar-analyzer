@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>v5.1 Test</title></head>
+<body>
+<h2>v5.1 Grammar Analyzer Test</h2>
+<pre id="output"></pre>
+<script src="js/grammar-data.js"></script>
+<script src="js/patterns-config.js"></script>
+<script src="js/hsk-vocab-dict.js"></script>
+<script src="js/analyzer.js"></script>
+<script>
+const out = document.getElementById('output');
+const log = (s) => { out.textContent += s + '\n'; };
+
+log('Built-in patterns: ' + MoxiPatternsConfig.builtinPatterns.length);
+log('Structural patterns: ' + MoxiPatternsConfig.structuralPatterns.length);
+log('HSK vocab: ' + HSK_VOCAB.n + ' words');
+log('PhraseDict entries: ' + Object.keys(new GrammarAnalyzer(GRAMMAR_DATA).phraseDict).length);
+log('');
+
+const analyzer = new GrammarAnalyzer(GRAMMAR_DATA);
+
+const tests = [
+  { text: '我觉得这道菜还挺好吃的', desc: '程度副词+形容词+语气词' },
+  { text: '叫上其他同学一起来吃吧！', desc: '祈使句' },
+  { text: '你觉得呢？', desc: '疑问语气词' },
+  { text: '他们明天去北京，我们后天去上海。', desc: '时间表达+代词' },
+  { text: '这个菜比那个菜好吃多了。', desc: '比较句' },
+  { text: '他不但会说中文，而且说得很好。', desc: '递进复句' },
+  { text: '高高兴兴地去上学了。', desc: '形容词重叠AABB' },
+  { text: '我们研究研究再说吧。', desc: '动词重叠ABAB' },
+  { text: '人人都说这本书很有意思。', desc: '名词重叠+有+adj' },
+  { text: '这间教室比那间大一点儿。', desc: '比较句+概数' },
+];
+
+for (const t of tests) {
+  const r = analyzer.analyze(t.text, 'zh');
+  log('━'.repeat(50));
+  log(`📝 ${t.desc}`);
+  log(`   "${t.text}"`);
+  log(`   识别到 ${r.matches.length} 个语法点 [建议等级: HSK${r.suggestedLevel}]`);
+  for (const m of r.matches) {
+    log(`   [L${m.level}] ${m.grammarPoint} ← "${m.pattern}" (${m.source})`);
+  }
+}
+
+// Segmentation test
+log('');
+log('━'.repeat(50));
+log('📊 分词测试');
+const segText = '我觉得这道菜还挺好吃的';
+const tokens = analyzer._segment(segText);
+log(`   "${segText}" → ${tokens.length} tokens:`);
+for (const t of tokens) {
+  log(`   "${t.w}" [L${t.level}] (${t.pos_tag}) @${t.pos}`);
+}
+
+log('');
+log('✅ Test complete');
+</script>
+</body>
+</html>

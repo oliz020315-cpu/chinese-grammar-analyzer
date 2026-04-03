@@ -175,6 +175,81 @@ class GrammarAnalyzer {
   _buildPhraseDict() {
     const phrases = {};
     
+    // ═══ 1-2级基础词汇（HSK词汇补充） ═══
+    const basicWords = {
+      // ── 人称代词 ──
+      '自己': { level: 1, grammarPoint: '反身代词（自己）', grammarPointEn: 'Reflexive pronoun (自己)' },
+      '大家': { level: 1, grammarPoint: '代词（大家）', grammarPointEn: 'Pronoun (大家)' },
+      '别人': { level: 2, grammarPoint: '代词（别人）', grammarPointEn: 'Pronoun (别人)' },
+
+      // ── 时间词（高频日常） ──
+      '昨天': { level: 1, grammarPoint: '时间词（昨天）', grammarPointEn: 'Time word (昨天)' },
+      '今天': { level: 1, grammarPoint: '时间词（今天）', grammarPointEn: 'Time word (今天)' },
+      '明天': { level: 1, grammarPoint: '时间词（明天）', grammarPointEn: 'Time word (明天)' },
+      '后天': { level: 2, grammarPoint: '时间词（后天）', grammarPointEn: 'Time word (后天)' },
+      '前天': { level: 2, grammarPoint: '时间词（前天）', grammarPointEn: 'Time word (前天)' },
+      '早上': { level: 1, grammarPoint: '时间词（早上）', grammarPointEn: 'Time word (早上)' },
+      '上午': { level: 1, grammarPoint: '时间词（上午）', grammarPointEn: 'Time word (上午)' },
+      '中午': { level: 1, grammarPoint: '时间词（中午）', grammarPointEn: 'Time word (中午)' },
+      '下午': { level: 1, grammarPoint: '时间词（下午）', grammarPointEn: 'Time word (下午)' },
+      '晚上': { level: 1, grammarPoint: '时间词（晚上）', grammarPointEn: 'Time word (晚上)' },
+      '这次': { level: 1, grammarPoint: '指示代词+时间（这次）', grammarPointEn: 'Demonstrative+time (这次)' },
+      '那次': { level: 1, grammarPoint: '指示代词+时间（那次）', grammarPointEn: 'Demonstrative+time (那次)' },
+      '下次': { level: 2, grammarPoint: '指示代词+时间（下次）', grammarPointEn: 'Demonstrative+time (下次)' },
+      '上次': { level: 2, grammarPoint: '指示代词+时间（上次）', grammarPointEn: 'Demonstrative+time (上次)' },
+      '每次': { level: 2, grammarPoint: '量词短语（每次）', grammarPointEn: 'Classifier phrase (每次)' },
+      '现在': { level: 1, grammarPoint: '时间词（现在）', grammarPointEn: 'Time word (现在)' },
+      '以后': { level: 2, grammarPoint: '时间词（以后）', grammarPointEn: 'Time word (以后)' },
+      '以前': { level: 2, grammarPoint: '时间词（以前）', grammarPointEn: 'Time word (以前)' },
+      '这时候': { level: 1, grammarPoint: '时间词（这时候）', grammarPointEn: 'Time word (这时候)' },
+      '那时候': { level: 2, grammarPoint: '时间词（那时候）', grammarPointEn: 'Time word (那时候)' },
+
+      // ── 高频名词（含语法功能）───
+      '同学': { level: 1, grammarPoint: '名词（同学）', grammarPointEn: 'Noun (同学)' },
+      '朋友': { level: 1, grammarPoint: '名词（朋友）', grammarPointEn: 'Noun (朋友)' },
+      '老师': { level: 1, grammarPoint: '名词（老师）', grammarPointEn: 'Noun (老师)' },
+      '学生': { level: 1, grammarPoint: '名词（学生）', grammarPointEn: 'Noun (学生)' },
+      '东西': { level: 1, grammarPoint: '名词（东西）', grammarPointEn: 'Noun (东西)' },
+      '地方': { level: 1, grammarPoint: '名词（地方）', grammarPointEn: 'Noun (地方)' },
+      '时候': { level: 1, grammarPoint: '名词/时间（时候）', grammarPointEn: 'Noun/Time (时候)' },
+      '问题': { level: 1, grammarPoint: '名词（问题）', grammarPointEn: 'Noun (问题)' },
+      '事情': { level: 1, grammarPoint: '名词（事情）', grammarPointEn: 'Noun (事情)' },
+      '办法': { level: 2, grammarPoint: '名词（办法）', grammarPointEn: 'Noun (办法)' },
+      '意思': { level: 1, grammarPoint: '名词（意思）', grammarPointEn: 'Noun (意思)' },
+      '名字': { level: 1, grammarPoint: '名词（名字）', grammarPointEn: 'Noun (名字)' },
+      '样子': { level: 2, grammarPoint: '名词（样子）', grammarPointEn: 'Noun (样子)' },
+      '地方': { level: 1, grammarPoint: '名词（地方）', grammarPointEn: 'Noun (地方)' },
+
+      // ── "有"+形容词（评价）───
+      '有意思': { level: 2, grammarPoint: '形容词评价（有意思）', grammarPointEn: 'Adjective evaluation (有意思)' },
+      '有道理': { level: 3, grammarPoint: '形容词评价（有道理）', grammarPointEn: 'Adjective evaluation (有道理)' },
+      '有礼貌': { level: 2, grammarPoint: '形容词评价（有礼貌）', grammarPointEn: 'Adjective evaluation (有礼貌)' },
+      '有水平': { level: 3, grammarPoint: '形容词评价（有水平）', grammarPointEn: 'Adjective evaluation (有水平)' },
+      '有经验': { level: 3, grammarPoint: '形容词评价（有经验）', grammarPointEn: 'Adjective evaluation (有经验)' },
+      '有能力': { level: 3, grammarPoint: '形容词评价（有能力）', grammarPointEn: 'Adjective evaluation (有能力)' },
+      '有名': { level: 2, grammarPoint: '形容词评价（有名）', grammarPointEn: 'Adjective evaluation (有名)' },
+      '有用': { level: 2, grammarPoint: '形容词评价（有用）', grammarPointEn: 'Adjective evaluation (有用)' },
+      '好吃': { level: 1, grammarPoint: '形容词（好吃）', grammarPointEn: 'Adjective (好吃)' },
+      '好看': { level: 1, grammarPoint: '形容词（好看）', grammarPointEn: 'Adjective (好看)' },
+      '好听': { level: 1, grammarPoint: '形容词（好听）', grammarPointEn: 'Adjective (好听)' },
+      '好玩': { level: 1, grammarPoint: '形容词（好玩）', grammarPointEn: 'Adjective (好玩)' },
+
+      // ── 高频形容词 ──
+      '漂亮': { level: 1, grammarPoint: '形容词（漂亮）', grammarPointEn: 'Adjective (漂亮)' },
+      '干净': { level: 1, grammarPoint: '形容词（干净）', grammarPointEn: 'Adjective (干净)' },
+      '热闹': { level: 2, grammarPoint: '形容词（热闹）', grammarPointEn: 'Adjective (热闹)' },
+      '辛苦': { level: 2, grammarPoint: '形容词（辛苦）', grammarPointEn: 'Adjective (辛苦)' },
+      '厉害': { level: 2, grammarPoint: '形容词（厉害）', grammarPointEn: 'Adjective (厉害)' },
+
+      // ── 口语表达（2级）───
+      '好吧': { level: 2, grammarPoint: '口语表达（好吧）', grammarPointEn: 'Spoken expression (好吧)' },
+      '行吧': { level: 2, grammarPoint: '口语表达（行吧）', grammarPointEn: 'Spoken expression (行吧)' },
+      '算了': { level: 2, grammarPoint: '口语表达（算了）', grammarPointEn: 'Spoken expression (算了)' },
+      '真的': { level: 1, grammarPoint: '副词（真的）', grammarPointEn: 'Adverb (真的)' },
+      '真的吗': { level: 1, grammarPoint: '疑问（真的吗）', grammarPointEn: 'Question (真的吗)' },
+    };
+    Object.assign(phrases, basicWords);
+
     // ═══ 时间短语 ═══
     const timePhrases = {
       '当天': { level: 5, grammarPoint: '时间表达（当天）', grammarPointEn: 'Time expression (当天)' },
@@ -359,31 +434,312 @@ class GrammarAnalyzer {
 
   /**
    * Lightweight Forward Maximum Match (FMM) segmenter.
-   * Uses phraseDict as dictionary for zero-dependency segmentation.
-   * Returns array of { w: word, pos: position, len: length }.
+   * Uses phraseDict + HSK vocabulary dictionary for segmentation.
+   * Returns array of { w: word, pos: position, len: length, level: HSK level, pos_tag: POS tag }.
+   * 
+   * v5.1: Integrated HSK vocabulary (11000+ words) for much better segmentation coverage.
    */
   _segment(text) {
-    const dict = this.phraseDict;
+    // Build merged dictionary: phraseDict (grammar-specific) + HSK vocab (general)
+    // HSK vocab has priority for common words, phraseDict for grammar patterns
     const maxLen = 8;
     const tokens = [];
     let i = 0;
+
+    // Check if HSK vocab is available (compact format: wm = word map)
+    const hasHSK = typeof HSK_VOCAB !== 'undefined' && HSK_VOCAB.wm;
+
     while (i < text.length) {
+      const ch = text[i];
+      // Skip non-CJK characters (punctuation, spaces, etc.)
+      if (!/[\u4e00-\u9fff]/.test(ch)) {
+        tokens.push({ w: ch, pos: i, len: 1, level: 0, pos_tag: 'punct' });
+        i++;
+        continue;
+      }
+
       let matched = false;
+      // Try longest match first
       for (let len = Math.min(maxLen, text.length - i); len >= 2; len--) {
         const word = text.substring(i, i + len);
-        if (dict[word]) {
-          tokens.push({ w: word, pos: i, len });
+
+        // Check phraseDict first (grammar-specific, higher priority)
+        if (this.phraseDict[word]) {
+          tokens.push({
+            w: word, pos: i, len,
+            level: this.phraseDict[word].level,
+            pos_tag: 'phrase'
+          });
           i += len;
           matched = true;
           break;
         }
+
+        // Then check HSK vocabulary (compact format: wm[word] = [level, pos])
+        if (hasHSK && HSK_VOCAB.wm) {
+          const arr = HSK_VOCAB.wm[word];
+          if (arr) {
+            tokens.push({
+              w: word, pos: i, len,
+              level: arr[0],
+              pos_tag: arr[1] || 'unknown'
+            });
+            i += len;
+            matched = true;
+            break;
+          }
+        }
       }
+
       if (!matched) {
-        tokens.push({ w: text[i], pos: i, len: 1 });
+        // Single character: try HSK charMap (compact format: cm[char] = [level, pos])
+        let level = 0;
+        let pos_tag = 'unknown';
+        if (hasHSK && HSK_VOCAB.cm) {
+          const arr = HSK_VOCAB.cm[ch];
+          if (arr) {
+            level = arr[0];
+            pos_tag = arr[1] || 'unknown';
+          }
+        }
+        tokens.push({ w: ch, pos: i, len: 1, level, pos_tag });
         i++;
       }
     }
     return tokens;
+  }
+
+  /**
+   * Split text into sentences by punctuation.
+   * Returns array of { text, start, end }.
+   * Preserves punctuation in the sentence text.
+   */
+  _splitSentences(text) {
+    const sentences = [];
+    // Split by sentence-ending punctuation but keep the punctuation
+    const parts = text.split(/(?<=[。！？；!?;…])/g);
+    let offset = 0;
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (!trimmed) { offset += part.length; continue; }
+      sentences.push({
+        text: trimmed,
+        start: offset,
+        end: offset + trimmed.length
+      });
+      offset += part.length;
+    }
+    // If no sentence-ending punctuation found, treat whole text as one sentence
+    if (sentences.length === 0 && text.trim()) {
+      sentences.push({ text: text.trim(), start: 0, end: text.trim().length });
+    }
+    return sentences;
+  }
+
+  /**
+   * Context-aware particle analysis (的/得/地).
+   * Analyzes surrounding characters to determine the grammatical function.
+   * Called after regex matching to refine or add particle matches.
+   */
+  _analyzeParticleContext(text, existingMatches) {
+    const additions = [];
+    const existingPositions = new Set(existingMatches.map(m => m.position + '-' + m.pattern));
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch !== '的' && ch !== '得' && ch !== '地') continue;
+
+      const prevCh = i > 0 ? text[i - 1] : '';
+      const nextCh = i < text.length - 1 ? text[i + 1] : '';
+      const prev2 = i > 1 ? text[i - 2] : '';
+      const next2 = i < text.length - 2 ? text[i + 2] : '';
+
+      if (ch === '地') {
+        // 地：前面应该是修饰语（副词/形容词），后面应该是动词
+        // Pattern: 副词/形容词 + 地 + 动词
+        if (nextCh && /[\u4e00-\u9fff]/.test(nextCh)) {
+          // Check if this is already matched
+          const key = (i - 2) + '-';
+          const matchLen = Math.min(i + 3, text.length) - Math.max(0, i - 2);
+          const contextText = text.substring(Math.max(0, i - 2), Math.min(i + 3, text.length));
+          // Only add if we see a clear Adverb+地+Verb pattern
+          if (/[\u4e00-\u9fff]地[\u4e00-\u9fff]{2,}/.test(text.substring(i - 1, i + 4))) {
+            const matchStart = Math.max(0, i - 1);
+            const matchEnd = Math.min(text.length, i + 3);
+            const matchText = text.substring(matchStart, matchEnd);
+            if (!existingPositions.has(matchStart + '-' + matchText)) {
+              additions.push({
+                pattern: matchText,
+                grammarPoint: '结构助词（…地…）',
+                grammarPointEn: 'Structural particle (…地…)',
+                level: 3,
+                position: matchStart,
+                source: 'context-particle'
+              });
+            }
+          }
+        }
+      }
+
+      if (ch === '的' && !nextCh) {
+        // 句末"的"：可能是省略定语的"是…的"强调句
+        // e.g., "我是昨天来的"
+        if (prevCh && /[\u4e00-\u9fff]/.test(prevCh)) {
+          // Look back for "是"
+          let foundShi = false;
+          for (let j = i - 2; j >= Math.max(0, i - 20); j--) {
+            if (text[j] === '是' && (j === 0 || /[\u4e00-\u9fff，]/.test(text[j - 1]) || text[j - 1] === '，')) {
+              foundShi = true;
+              break;
+            }
+            if (/[\u4e00-\u9fff]{1,4}/.test(text.substring(j, j + 1)) === false) break;
+          }
+          if (foundShi) {
+            // This is a "是...的" pattern at sentence end
+            // Don't add duplicate if already matched
+          }
+        }
+      }
+
+      if (ch === '呢') {
+        // 呢：上下文判断
+        // 句末 + 疑问号 → 疑问语气词
+        // 句中 + 前面有动词 → "正在...呢"持续态
+        if (nextCh === '？' || nextCh === '?') {
+          // Already handled by regex, skip
+        } else if (/[，。！?！\s]/.test(nextCh)) {
+          // 句末但不是疑问 → 可能是"还有呢"类
+        } else if (/[\u4e00-\u9fff]/.test(nextCh)) {
+          // 句中的"呢" → 疑问/列举
+          // e.g., "你觉得呢？"
+        }
+      }
+    }
+    return additions;
+  }
+
+  /**
+   * Sentence-level pattern matching.
+   * Matches whole-sentence structures that regex can't easily capture.
+   */
+  _matchSentencePatterns(text) {
+    const matches = [];
+    const sentences = this._splitSentences(text);
+
+    for (const sent of sentences) {
+      const s = sent.text;
+      const sStart = sent.start;
+
+      // ── 祈使句：V/VP + 吧/呗 ──
+      if (/[吧呗啊]$/.test(s) && /[\u4e00-\u9fff]{2,}(吧|呗|啊)$/.test(s)) {
+        const match = s.match(/([\u4e00-\u9fff]{2,}(吧|呗))$/);
+        if (match) {
+          matches.push({
+            pattern: match[1],
+            grammarPoint: '祈使句（…吧）',
+            grammarPointEn: 'Imperative (…吧)',
+            level: 2,
+            position: sStart + s.indexOf(match[1]),
+            source: 'sentence-pattern'
+          });
+        }
+      }
+
+      // ── 感叹句：太…了 ──
+      if (/^[\u4e00-\u9fff]*太[\u4e00-\u9fff]{1,6}了[！!]?$/.test(s)) {
+        const match = s.match(/(太[\u4e00-\u9fff]{1,6}了)/);
+        if (match) {
+          matches.push({
+            pattern: match[1],
+            grammarPoint: '感叹句（太…了）',
+            grammarPointEn: 'Exclamatory (太…了)',
+            level: 1,
+            position: sStart + s.indexOf(match[1]),
+            source: 'sentence-pattern'
+          });
+        }
+      }
+
+      // ── "的"字句末省略（是…的强调句）──
+      if (/^.{2,20}的$/.test(s) && s.includes('是')) {
+        const shiIdx = s.indexOf('是');
+        const matchText = s.substring(shiIdx);
+        if (matchText.length >= 3 && matchText.length <= 20) {
+          matches.push({
+            pattern: matchText,
+            grammarPoint: '是…的强调句',
+            grammarPointEn: '是…的 cleft sentence',
+            level: 4,
+            position: sStart + shiIdx,
+            source: 'sentence-pattern'
+          });
+        }
+      }
+
+      // ── "有"+形容词评价句 ──
+      if (/^.{0,6}有[\u4e00-\u9fff]{1,4}(了|[。！?！])?$/.test(s)) {
+        const match = s.match(/(有[\u4e00-\u9fff]{1,4})/);
+        if (match) {
+          const adjWords = ['意思', '道理', '礼貌', '水平', '经验', '能力', '名', '用', '趣'];
+          if (adjWords.some(w => match[1].includes(w))) {
+            matches.push({
+              pattern: match[1],
+              grammarPoint: '评价表达（有+adj）',
+              grammarPointEn: 'Evaluation (有+adj)',
+              level: 2,
+              position: sStart + s.indexOf(match[1]),
+              source: 'sentence-pattern'
+            });
+          }
+        }
+      }
+
+      // ── "挺…的" 固定结构 ──
+      if (/挺[\u4e00-\u9fff]{1,6}的/.test(s)) {
+        const match = s.match(/(挺[\u4e00-\u9fff]{1,6}的)/);
+        if (match) {
+          matches.push({
+            pattern: match[1],
+            grammarPoint: '程度副词结构（挺…的）',
+            grammarPointEn: 'Degree structure (挺…的)',
+            level: 2,
+            position: sStart + s.indexOf(match[1]),
+            source: 'sentence-pattern'
+          });
+        }
+      }
+
+      // ── 疑问句末"呢"（非紧跟问号）──
+      if (/[\u4e00-\u9fff]呢[？?]?$/.test(s) && !/吗呢|什么呢$/.test(s)) {
+        const match = s.match(/([\u4e00-\u9fff]呢)/);
+        if (match) {
+          matches.push({
+            pattern: match[1],
+            grammarPoint: '疑问语气（呢）',
+            grammarPointEn: 'Question particle (呢)',
+            level: 1,
+            position: sStart + s.lastIndexOf(match[1]),
+            source: 'sentence-pattern'
+          });
+        }
+      }
+
+      // ── 反问句末"吗" ──
+      if (/[\u4e00-\u9fff]吗[？?]?$/.test(s)) {
+        const match = s.match(/([\u4e00-\u9fff]{1,4}吗)/);
+        if (match) {
+          matches.push({
+            pattern: match[1],
+            grammarPoint: '是非疑问（…吗）',
+            grammarPointEn: 'Yes-no question (…吗)',
+            level: 1,
+            position: sStart + s.lastIndexOf(match[1]),
+            source: 'sentence-pattern'
+          });
+        }
+      }
+    }
+    return matches;
   }
 
   /**
@@ -433,9 +789,85 @@ class GrammarAnalyzer {
       } catch (e) { /* skip invalid patterns */ }
     }
 
+    // Phase 1.5: Segmentation-driven matching using HSK vocabulary + phraseDict
+    // This catches words missed by regex but present in the grammar/HSK vocabulary
+    const segTokens = this._segment(text);
+    const existingPosSet = new Set();
+    for (const m of result.matches) {
+      for (let p = m.position; p < m.position + m.pattern.length; p++) {
+        existingPosSet.add(p);
+      }
+    }
+    // Define POS categories that are grammar-relevant (not every word should be a match)
+    const GRAMMAR_POS = new Set([
+      '代', '动', '形', '副', '介', '连', '助', '叹', '数', '量',
+      '名', '区别', '拟声', '时间', '处所', '方位'
+    ]);
+    // Classifiers and common grammatical function words to always match from segmentation
+    const GRAMMAR_FUNCTION_CHARS = new Set('的得了着过是在都有也还没就不都更最比较特别已经正在刚快马上别人自己大家'.split(''));
+    
+    for (const token of segTokens) {
+      if (token.len < 2) continue; // Skip single chars (already handled by regex)
+      // Skip if this token's position range already has a match
+      let overlaps = false;
+      for (let p = token.pos; p < token.pos + token.len; p++) {
+        if (existingPosSet.has(p)) { overlaps = true; break; }
+      }
+      if (overlaps) continue;
+      
+      // Only match words that have grammatical relevance
+      const posTag = token.pos_tag || '';
+      const firstChar = token.w[0];
+      
+      // Match words from phraseDict that are 2+ chars
+      if (this.phraseDict[token.w]) {
+        const info = this.phraseDict[token.w];
+        result.matches.push({
+          pattern: token.w,
+          grammarPoint: lang === 'zh' ? info.grammarPoint : (info.grammarPointEn || info.grammarPoint),
+          level: info.level,
+          position: token.pos,
+          source: 'segment-phrase',
+          gpId: info.gpId || ''
+        });
+        for (let p = token.pos; p < token.pos + token.len; p++) existingPosSet.add(p);
+        continue;
+      }
+      
+      // Match HSK vocabulary words that are grammar-relevant
+      // Focus on: conjunctions, prepositions, adverbs, particles, pronouns, modal verbs
+      if (token.level <= 6) {
+        const isGrammarRelevant = GRAMMAR_POS.has(posTag) ||
+          posTag.includes('副') || posTag.includes('连') || posTag.includes('介') ||
+          posTag.includes('助') || posTag.includes('代');
+        
+        if (isGrammarRelevant && token.level <= 3) {
+          // Low-level grammar words are likely important
+          result.matches.push({
+            pattern: token.w,
+            grammarPoint: lang === 'zh' 
+              ? `${this._posLabelZh(posTag)}（${token.w}）`
+              : `${this._posLabelEn(posTag)} (${token.w})`,
+            level: token.level,
+            position: token.pos,
+            source: 'segment-hsk'
+          });
+          for (let p = token.pos; p < token.pos + token.len; p++) existingPosSet.add(p);
+        }
+      }
+    }
+
     // Phase 2: Match structural patterns (context-aware head-tail matching)
     const structuralMatches = this._matchStructuralPatterns(text, lang);
     result.matches.push(...structuralMatches);
+
+    // Phase 2.5: Match sentence-level patterns (imperative, exclamatory, etc.)
+    const sentenceMatches = this._matchSentencePatterns(text);
+    result.matches.push(...sentenceMatches);
+
+    // Phase 2.7: Context-aware particle analysis (的/得/地 refinement)
+    const particleAdditions = this._analyzeParticleContext(text, result.matches);
+    result.matches.push(...particleAdditions);
 
     // Phase 3: Match database keywords
     const seen = new Set();
@@ -479,7 +911,7 @@ class GrammarAnalyzer {
 
     // Phase 5: Remove overlapping matches with source priority
     // Source priority: phrase(4) > structural(3) > builtin(2) > database(1)
-    const SOURCE_PRIORITY = { phrase: 4, structural: 3, builtin: 2, database: 1 };
+    const SOURCE_PRIORITY = { phrase: 4, structural: 3, builtin: 2, database: 1, 'segment-phrase': 3.5, 'segment-hsk': 1.5, 'sentence-pattern': 3.8, 'context-particle': 3.2 };
     const srcPrio = (m) => SOURCE_PRIORITY[m.source] || 0;
     // Strategy: Sort by position → source priority desc → length desc → level desc.
     // Overlap resolution:
@@ -521,6 +953,34 @@ class GrammarAnalyzer {
       if (!dominated) filtered.push(m);
     }
     result.matches = filtered;
+
+    // Phase 5.5: Post-processing — remove matches that are substrings of higher-quality matches
+    // E.g., if "明天" (phrase, L1) is matched and "明" (builtin result complement, L2) overlaps, keep "明天"
+    const timeWordPositions = new Set();
+    for (const m of result.matches) {
+      if (m.source === 'phrase' && (
+        m.grammarPoint.includes('时间') || m.grammarPoint.includes('名词') || m.grammarPoint.includes('代词')
+      )) {
+        for (let p = m.position; p < m.position + m.pattern.length; p++) {
+          timeWordPositions.add(p);
+        }
+      }
+    }
+    if (timeWordPositions.size > 0) {
+      result.matches = result.matches.filter(m => {
+        if (m.source !== 'builtin' && m.pattern.length <= 1) return true;
+        // Check if this match's position overlaps with a time/noun word
+        const startPos = m.position;
+        const endPos = m.position + m.pattern.length;
+        for (let p = startPos; p < endPos; p++) {
+          if (timeWordPositions.has(p)) {
+            // This match overlaps with a time/noun word — skip if it's a single-char or low-priority builtin
+            if (m.source === 'builtin' && m.pattern.length <= 2) return false;
+          }
+        }
+        return true;
+      });
+    }
 
     // Phase 6: Calculate distribution
     for (const m of result.matches) {
@@ -779,7 +1239,7 @@ Example output:
       }
 
       // Re-run Phase 5 overlap resolution on merged results (with source priority)
-      const llmSrcPrio = (m) => ({ phrase: 4, structural: 3, builtin: 2, database: 1, llm: 5 }[m.source] || 0);
+      const llmSrcPrio = (m) => ({ phrase: 4, structural: 3, builtin: 2, database: 1, llm: 5, 'segment-phrase': 3.5, 'segment-hsk': 1.5, 'sentence-pattern': 3.8, 'context-particle': 3.2 }[m.source] || 0);
       localResult.matches.sort((a, b) => a.position - b.position || llmSrcPrio(b) - llmSrcPrio(a) || b.pattern.length - a.pattern.length || b.level - a.level);
       const mergedFiltered = [];
       for (let i = 0; i < localResult.matches.length; i++) {
@@ -833,6 +1293,32 @@ Example output:
     }
 
     return localResult;
+  }
+
+  _posLabelZh(pos) {
+    const map = {
+      '代': '代词', '动': '动词', '形': '形容词', '副': '副词', '介': '介词',
+      '连': '连词', '助': '助词', '叹': '叹词', '数': '数词', '量': '量词',
+      '名': '名词', '区别': '区别词', '拟声': '拟声词', '时间': '时间词',
+      '处所': '处所词', '方位': '方位词'
+    };
+    for (const [key, label] of Object.entries(map)) {
+      if (pos.includes(key)) return label;
+    }
+    return '词';
+  }
+
+  _posLabelEn(pos) {
+    const map = {
+      '代': 'Pronoun', '动': 'Verb', '形': 'Adjective', '副': 'Adverb', '介': 'Preposition',
+      '连': 'Conjunction', '助': 'Particle', '叹': 'Interjection', '数': 'Numeral', '量': 'Classifier',
+      '名': 'Noun', '区别': 'Distinguisher', '拟声': 'Onomatopoeia', '时间': 'Time word',
+      '处所': 'Place word', '方位': 'Locative'
+    };
+    for (const [key, label] of Object.entries(map)) {
+      if (pos.includes(key)) return label;
+    }
+    return 'Word';
   }
 
   _suggestLevel(result) {

@@ -52,7 +52,29 @@ const BUILTIN_PATTERNS = [
   {pattern: /真[好吃大漂亮多高低快慢好帅棒难]/g, level: 1, desc_zh: '程度副词（真）', desc_en: 'Degree adverb (真)'},
   {pattern: /太[\u4e00-\u9fff]{1,6}了/g, level: 1, desc_zh: '程度副词（太…了）', desc_en: 'Degree adverb (太…了)'},
   {pattern: /最[\u4e00-\u9fff]/g, level: 1, desc_zh: '程度副词（最）', desc_en: 'Degree adverb (最)'},
+  {pattern: /挺[\u4e00-\u9fff]{1,8}的(?=[，。！？、\s]|$)/g, level: 2, desc_zh: '程度副词（挺…的）', desc_en: 'Degree adverb (挺…的)'},
+  {pattern: /(?<![很更最非常特别比较])(?<=[一挺好比多更])[好吃大漂亮干净多高低快慢好帅棒难贵厉害](?![的得])/g, level: 1, desc_zh: '程度副词（挺/好/多）', desc_en: 'Degree adverb (挺/好/多)'},
+  {pattern: /特别[\u4e00-\u9fff]/g, level: 2, desc_zh: '程度副词（特别）', desc_en: 'Degree adverb (特别)'},
+  {pattern: /比较[\u4e00-\u9fff]/g, level: 2, desc_zh: '程度副词（比较）', desc_en: 'Degree adverb (比较)'},
+  {pattern: /更[\u4e00-\u9fff]/g, level: 2, desc_zh: '程度副词（更）', desc_en: 'Degree adverb (更)'},
   {pattern: /一点儿也不[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '强调否定（一点儿也不…）', desc_en: 'Emphatic negation (一点儿也不…)'},
+
+  // ─── 名词重叠（AA式）───
+  {pattern: /人人|天天|年年|月月|天天|个个|家家|户户|处处|步步|事事|时时|夜夜|岁岁/g, level: 1, desc_zh: '名词重叠（AA式）', desc_en: 'Noun reduplication (AA)'},
+
+  // ─── 动词重叠（AA/ABAB式）───
+  {pattern: /看看|说说|走走|试试|想想|听听|问问|笑笑|吃吃|喝喝|坐坐|等等|歇歇|聊聊|说说|读读|写写|画画|跑跑|跳跳|洗洗|歇歇|找找/g, level: 1, desc_zh: '动词重叠（AA式）', desc_en: 'Verb reduplication (AA)'},
+  {pattern: /研究研究|考虑考虑|讨论讨论|商量商量|打扫打扫|整理整理|休息休息|准备准备|锻炼锻炼|翻译翻译|复习复习|预习预习|安排安排|检查检查|调查调查|交流交流|参观参观|学习学习|认识认识|了解了解|帮助帮助|介绍介绍|收拾收拾|修理修理|结婚结婚|散步散步|运动运动|锻炼锻炼|联系联系|解释解释|计划计划|设计设计|体验体验/g, level: 2, desc_zh: '动词重叠（ABAB式）', desc_en: 'Verb reduplication (ABAB)'},
+
+  // ─── 量词重叠（AABB式）───
+  {pattern: /个个|条条|种种|层层|堆堆|排排|颗颗|串串|把把|块块|片片/g, level: 2, desc_zh: '量词重叠（AA式）', desc_en: 'Classifier reduplication (AA)'},
+
+  // ─── 祈使句（吧/啊字句）───
+  {pattern: /[\u4e00-\u9fff]{1,4}(吧|呗)[！!。.？?，,]*/g, level: 2, desc_zh: '祈使句（…吧）', desc_en: 'Imperative (…吧)'},
+  {pattern: /[\u4e00-\u9fff]{1,6}(啊|嘛)[！!。.？?，,]*/g, level: 1, desc_zh: '语气助词（啊/嘛）', desc_en: 'Modal particle (啊/嘛)'},
+
+  // ─── 形容词重叠（AABB/ABAB式）───
+  {pattern: /高高兴兴|开开心心|快快乐乐|干干净净|整整齐齐|安安静静|舒舒服服|清清楚楚|明明白白|简简单单|热热闹闹|漂漂亮亮|白白胖胖|大大小小|老老实实|认认真真|踏踏实实|仔仔细细|马马虎虎|平平淡淡|普普通通|清清爽爽|端端正正|稳稳当当/g, level: 2, desc_zh: '形容词重叠（AABB式）', desc_en: 'Adjective reduplication (AABB)'},
 
   // ─── 数量短语 ───
   {pattern: /[一二三四五六七八九十百千万两零半][个只条张本位名次间把朵块片双对群批套串碗杯瓶斤公斤米号岁年天月日种位分秒期届][\u4e00-\u9fff]?/g, level: 1, desc_zh: '数量词（数+量词）', desc_en: 'Numeral+classifier'},
@@ -162,7 +184,8 @@ const BUILTIN_PATTERNS = [
   // 使用 negative lookbehind 排除非补语词
   {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff])得(?!并不)[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '程度补语初步', desc_en: 'Degree complement (basic)'},
   // 结果补语：V+结果词（不含"好"，因为"好吃/好看"是形容词不是结果补语）
-  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+  // 要求：前面的动词至少1字 + 结果词本身 = 总匹配≥2字，避免"明"等单字误匹配
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要明天昨后])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
   {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '方式副词（看起来/看上去）', desc_en: 'Manner adverb (看起来/看上去)'},
   {pattern: /一般来说|总的来说|现在看来/g, level: 3, desc_zh: '方式副词（一般来说）', desc_en: 'Manner adverb (一般来说)'},
   {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '情态副词（看起来）', desc_en: 'Modal adverb (看起来)'},
@@ -234,7 +257,8 @@ const BUILTIN_PATTERNS = [
 
   // ─── 结果补语 ───
   {pattern: /到[\u4e00-\u9fff]{1,10}了/g, level: 3, desc_zh: '结果补语（…到…了）', desc_en: 'Result complement (…到…了)'},
-  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+  {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要明天昨后])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+
 
   // ─── 口语格式（中级） ───
   {pattern: /不了[了]/g, level: 3, desc_zh: '口语格式（…不了了）', desc_en: 'Spoken format'},
