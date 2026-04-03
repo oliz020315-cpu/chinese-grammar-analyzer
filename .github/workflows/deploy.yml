@@ -19,6 +19,11 @@ jobs:
       - name: Install CloudBase CLI
         run: npm install -g @cloudbase/cli
 
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p deploy
+          cp -r index.html css js lib deploy/
+
       - name: Deploy to CloudBase Static Hosting
         env:
           TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
@@ -26,4 +31,4 @@ jobs:
           TCB_ENV_ID: ${{ secrets.TCB_ENV_ID }}
         run: |
           tcb login --apiKeyId "$TCB_SECRET_ID" --apiKey "$TCB_SECRET_KEY"
-          tcb hosting deploy ./ -e "$TCB_ENV_ID"
+          tcb hosting deploy ./deploy -e "$TCB_ENV_ID"
