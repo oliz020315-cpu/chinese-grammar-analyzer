@@ -25,7 +25,13 @@ const BUILTIN_PATTERNS = [
   {pattern: /没[有]?[来去吃喝做写看听说读买卖走跑坐站睡醒开门关门知道认识学习工作休息吃饭洗澡上课]/g, level: 1, desc_zh: '否定（没+动词）', desc_en: 'Negation (没+verb)'},
   {pattern: /别[进来出去说笑哭跑走动碰摸吵喝吃买做看]/g, level: 1, desc_zh: '否定祈使（别+动词）', desc_en: 'Negative imperative (别+verb)'},
 
-  // ─── 疑问 ───
+  // ─── 存现句 ───
+  {pattern: /[\u4e00-\u9fff]{1,6}上[\u4e00-\u9fff]{1,2}着/g, level: 1, desc_zh: '存现句（…上/里/前+着）', desc_en: 'Existential sentence (loc+着)'},
+  {pattern: /[\u4e00-\u9fff]{1,6}里[\u4e00-\u9fff]{1,2}着/g, level: 1, desc_zh: '存现句（…里+着）', desc_en: 'Existential sentence (loc+着)'},
+  {pattern: /[\u4e00-\u9fff]{1,6}前[\u4e00-\u9fff]{1,2}着/g, level: 1, desc_zh: '存现句（…前+着）', desc_en: 'Existential sentence (loc+着)'},
+  {pattern: /[\u4e00-\u9fff]{1,6}[旁边对面中间]{1,2}[\u4e00-\u9fff]{1,2}着/g, level: 2, desc_zh: '存现句（方位+着）', desc_en: 'Existential sentence (loc+着)'},
+
+  // ─── 疑问（正反疑问） ───
   {pattern: /吗[？?]/g, level: 1, desc_zh: '是非疑问（吗）', desc_en: 'Yes-no question (吗)'},
   {pattern: /什么/g, level: 1, desc_zh: '疑问代词（什么）', desc_en: 'Interrogative (什么)'},
   {pattern: /谁/g, level: 1, desc_zh: '疑问代词（谁）', desc_en: 'Interrogative (谁)'},
@@ -36,12 +42,17 @@ const BUILTIN_PATTERNS = [
   {pattern: /呢[？?]$/gm, level: 1, desc_zh: '疑问语气（呢）', desc_en: 'Question particle (呢)'},
   {pattern: /还是/g, level: 1, desc_zh: '选择疑问（还是）', desc_en: 'Alternative question (还是)'},
 
+  // ─── 正反疑问 ───
+  {pattern: /[\u4e00-\u9fff]{1,6}不[\u4e00-\u9fff]{1,4}[？?]/g, level: 1, desc_zh: '正反疑问（V不V）', desc_en: 'A-not-A question'},
+  {pattern: /好[不]好吃|好[不]好看/g, level: 1, desc_zh: '正反疑问（好不+adj）', desc_en: 'A-not-A question'},
+
   // ─── 程度副词 ───
   {pattern: /很[\u4e00-\u9fff]/g, level: 1, desc_zh: '程度副词（很）', desc_en: 'Degree adverb (很)'},
   {pattern: /非常[\u4e00-\u9fff]/g, level: 1, desc_zh: '程度副词（非常）', desc_en: 'Degree adverb (非常)'},
   {pattern: /真[好吃大漂亮多高低快慢好帅棒难]/g, level: 1, desc_zh: '程度副词（真）', desc_en: 'Degree adverb (真)'},
   {pattern: /太[\u4e00-\u9fff]{1,6}了/g, level: 1, desc_zh: '程度副词（太…了）', desc_en: 'Degree adverb (太…了)'},
   {pattern: /最[\u4e00-\u9fff]/g, level: 1, desc_zh: '程度副词（最）', desc_en: 'Degree adverb (最)'},
+  {pattern: /一点儿也不[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '强调否定（一点儿也不…）', desc_en: 'Emphatic negation (一点儿也不…)'},
 
   // ─── 数量短语 ───
   {pattern: /[一二三四五六七八九十百千万两零半][个只条张本位名次间把朵块片双对群批套串碗杯瓶斤公斤米号岁年天月日种位分秒期届][\u4e00-\u9fff]?/g, level: 1, desc_zh: '数量词（数+量词）', desc_en: 'Numeral+classifier'},
@@ -101,6 +112,11 @@ const BUILTIN_PATTERNS = [
   {pattern: /跟[^，。？！\n]{1,8}一[样般]/g, level: 2, desc_zh: '比较句（跟…一样）', desc_en: 'Comparative (跟…一样)'},
   {pattern: /不如[^，。？！\n]{1,8}/g, level: 2, desc_zh: '比较句（不如）', desc_en: 'Comparative (不如)'},
 
+  // ─── 口语格式 ───
+  {pattern: /该[\u4e00-\u9fff]{1,6}了/g, level: 2, desc_zh: '口语格式（该…了）', desc_en: 'Spoken format (该…了)'},
+  {pattern: /都[\u4e00-\u9fff0-9]{1,6}了/g, level: 2, desc_zh: '口语格式（都…了）', desc_en: 'Spoken format (都…了)'},
+  {pattern: /要[^，。？！]{0,4}[下雨下雪刮风]/g, level: 2, desc_zh: '口语格式（要下雨了）', desc_en: 'Spoken format (要…了)'},
+
   // ─── 能愿动词扩展 ───
   {pattern: /应该|应当/g, level: 2, desc_zh: '能愿动词（应该）', desc_en: 'Modal (应该)'},
   {pattern: /可以/g, level: 2, desc_zh: '能愿动词（可以）', desc_en: 'Modal (可以)'},
@@ -142,6 +158,10 @@ const BUILTIN_PATTERNS = [
 
   // ─── "得"字补语初步 ───
   {pattern: /[\u4e00-\u9fff]{1,6}得(?!并不)[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '程度补语初步', desc_en: 'Degree complement (basic)'},
+  {pattern: /[\u4e00-\u9fff]{1,4}[到见完好坏错对住懂透明白清楚干净走跑开]/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+  {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '方式副词（看起来/看上去）', desc_en: 'Manner adverb (看起来/看上去)'},
+  {pattern: /一般来说|总的来说|现在看来/g, level: 3, desc_zh: '方式副词（一般来说）', desc_en: 'Manner adverb (一般来说)'},
+  {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '情态副词（看起来）', desc_en: 'Modal adverb (看起来)'},
 
   // ═══════════════════════════════════════════════════════════════
   // Level 3 — 中级 Intermediate (HSK 3-4)
@@ -151,11 +171,23 @@ const BUILTIN_PATTERNS = [
   {pattern: /因为[\u4e00-\u9fff，]{1,20}所以/g, level: 3, desc_zh: '因为……所以', desc_en: '因为……所以 (Because…so)'},
   {pattern: /由于[\u4e00-\u9fff，]{1,20}[因此所以因而]/g, level: 3, desc_zh: '由于……因此', desc_en: '由于……因此 (Due to…)'},
   {pattern: /[\u4e00-\u9fff]{1,10}是因为/g, level: 3, desc_zh: '……是因为', desc_en: '…是因为 (…is because)'},
+  {pattern: /因为[\u4e00-\u9fff，]{1,6}所以[\u4e00-\u9fff]{1,6}才/g, level: 4, desc_zh: '因果强调（因为…所以…才）', desc_en: 'Causal emphasis (因为…所以…才)'},
 
   // ─── 转折让步复句 ───
   {pattern: /虽然[\u4e00-\u9fff，]{1,20}但是/g, level: 3, desc_zh: '虽然……但是', desc_en: '虽然……但是 (Although…but)'},
   {pattern: /虽然[\u4e00-\u9fff，]{1,20}可是|虽然[\u4e00-\u9fff，]{1,20}不过/g, level: 3, desc_zh: '虽然……可是/不过', desc_en: '虽然……可是 (Although…however)'},
   {pattern: /但是|可是|不过/g, level: 3, desc_zh: '转折连词', desc_en: 'But (但是/可是/不过)'},
+  {pattern: /[\u4e00-\u9fff]{1,8}是[\u4e00-\u9fff]{1,8}，就是/g, level: 3, desc_zh: '转折（A是A，就是…）', desc_en: 'Concessive (A是A, 就是…)'},
+
+  // ─── 选择复句 ───
+  {pattern: /不是[\u4e00-\u9fff，]{1,10}就是[\u4e00-\u9fff，]{1,10}/g, level: 3, desc_zh: '选择（不是…就是…）', desc_en: 'Alternative (不是…就是…)'},
+  {pattern: /要么[\u4e00-\u9fff，]{1,10}要么/g, level: 4, desc_zh: '选择（要么…要么…）', desc_en: 'Alternative (要么…要么…)'},
+
+  // ─── 承接复句 ───
+  {pattern: /先[\u4e00-\u9fff，]{1,8}然后[\u4e00-\u9fff]{1,8}/g, level: 2, desc_zh: '承接（先…然后…）', desc_en: 'Sequential (先…然后…)'},
+
+  // ─── 递进复句 ───
+  {pattern: /并且[\u4e00-\u9fff]{0,8}/g, level: 3, desc_zh: '递进（并且）', desc_en: 'Progressive (并且)'},
 
   // ─── 条件假设复句 ───
   {pattern: /如果[\u4e00-\u9fff，]{1,20}就/g, level: 3, desc_zh: '如果……就', desc_en: '如果……就 (If…then)'},
@@ -195,6 +227,13 @@ const BUILTIN_PATTERNS = [
   // ─── 结果补语 ───
   {pattern: /到[\u4e00-\u9fff]{1,10}了/g, level: 3, desc_zh: '结果补语（…到…了）', desc_en: 'Result complement (…到…了)'},
   {pattern: /[\u4e00-\u9fff]{1,3}[到见完好坏错对住懂透明白清楚干净走跑开]/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
+
+  // ─── 口语格式（中级） ───
+  {pattern: /不了[了]/g, level: 3, desc_zh: '口语格式（…不了了）', desc_en: 'Spoken format'},
+  {pattern: /不了|不起/g, level: 3, desc_zh: '可能补语否定', desc_en: 'Potential complement negation'},
+  {pattern: /谁说[的呢]/g, level: 3, desc_zh: '口语格式（谁说…）', desc_en: 'Spoken format'},
+  {pattern: /X就X(点儿)?吧/g, level: 3, desc_zh: '口语格式（X就X吧）', desc_en: 'Spoken format (X就X吧)'},
+  {pattern: /X什么(啊)?/g, level: 3, desc_zh: '口语格式（X什么）', desc_en: 'Spoken format (X什么)'},
 
   // ─── 强调 / 固定格式 ───
   {pattern: /是[\u4e00-\u9fff，]{2,20}的/g, level: 4, desc_zh: '是…的 强调句', desc_en: '是…的 cleft sentence'},
@@ -249,6 +288,9 @@ const BUILTIN_PATTERNS = [
 
   // ─── 否定强调 ───
   {pattern: /并非|并不是|并没有/g, level: 4, desc_zh: '否定强调（并非）', desc_en: 'Emphatic negation (并非)'},
+
+  // ─── 双重否定强调 ───
+  {pattern: /没有[\u4e00-\u9fff]{0,4}不[\u4e00-\u9fff]{0,4}/g, level: 4, desc_zh: '双重否定（没有…不…）', desc_en: 'Double negation (没有…不…)'},
 
   // ─── 比喻 ───
   {pattern: /像[\u4e00-\u9fff，]{1,12}[一样一般似的]/g, level: 4, desc_zh: '比喻（像……一样）', desc_en: 'Simile (像…一样)'},
@@ -373,6 +415,65 @@ const BUILTIN_PATTERNS = [
   {pattern: /往往|每每|时常/g, level: 6, desc_zh: '书面频率副词', desc_en: 'Written frequency adverb'},
   {pattern: /但凡|凡是/g, level: 6, desc_zh: '条件（但凡/凡是）', desc_en: 'Condition (但凡/凡是)'},
   {pattern: /竟[\u4e00-\u9fff，]{0,4}|竟然[\u4e00-\u9fff，]{0,6}|居然[\u4e00-\u9fff，]{0,6}/g, level: 6, desc_zh: '意外（竟然/居然）', desc_en: 'Unexpected (竟然/居然)'},
+
+  // ─── 递进变体 ───
+  {pattern: /甚至[\u4e00-\u9fff]{0,4}都/g, level: 5, desc_zh: '递进（甚至…都）', desc_en: 'Progressive (甚至…都)'},
+
+  // ═══════════════════════════════════════════════════════════════
+  // v5.0 — 新增模式（来源：语法点检索表格 1488 条新例句）
+  // ═══════════════════════════════════════════════════════════════
+
+  // ─── 一+量词+比+一+量词（递进比较） ───
+  {pattern: /一[\u4e00-\u9fff]{1,2}比一[\u4e00-\u9fff]{1,2}/g, level: 3, desc_zh: '递进比较（一X比一X）', desc_en: 'Progressive comparative (一X比一X)'},
+
+  // ─── 有+量词+名（评价达到） ───
+  {pattern: /有[\u4e00-\u9fff0-9]{1,4}(高|长|远|重|多|深|厚|宽|大|岁)/g, level: 2, desc_zh: '评价句（有…高/多）', desc_en: 'Evaluation (有…高)'},
+
+  // ─── 由…组成 ───
+  {pattern: /由[\u4e00-\u9fff，]{1,10}组成/g, level: 4, desc_zh: '由…组成', desc_en: 'Composed of (由…组成)'},
+
+  // ─── 对…来说 ───
+  {pattern: /对[\u4e00-\u9fff]{1,8}来说/g, level: 3, desc_zh: '对…来说', desc_en: 'For… (对…来说)'},
+
+  // ─── 马上 / 赶快 / 赶紧 ───
+  {pattern: /马上|赶快|赶紧|立刻|连忙/g, level: 2, desc_zh: '时间副词（马上/赶快）', desc_en: 'Time adverb (马上/赶快)'},
+
+  // ─── 故意 / 特意 ───
+  {pattern: /故意|特意|专门/g, level: 3, desc_zh: '方式副词（故意/特意）', desc_en: 'Manner adverb (故意/特意)'},
+
+  // ─── 互相 / 彼此 ───
+  {pattern: /互相|彼此|相互/g, level: 3, desc_zh: '方式副词（互相）', desc_en: 'Manner adverb (互相)'},
+
+  // ─── 只不过 / 倒 ───
+  {pattern: /只不过|倒(?!是)/g, level: 4, desc_zh: '语气副词（只不过/倒）', desc_en: 'Modal adverb (只不过/倒)'},
+
+  // ─── 也许 / 恐怕 / 大概 ───
+  {pattern: /也许|恐怕|大概|可能(?!补)/g, level: 2, desc_zh: '情态副词（也许/大概）', desc_en: 'Modal adverb (也许/大概)'},
+
+  // ─── 重新 / 继续 ───
+  {pattern: /重新|继续|接着/g, level: 3, desc_zh: '时间副词（重新/继续）', desc_en: 'Time adverb (重新/继续)'},
+
+  // ─── 紧缩复句（一…就…） ───
+  {pattern: /一[\u4e00-\u9fff]{1,4}就[\u4e00-\u9fff]{1,4}/g, level: 3, desc_zh: '紧缩复句（一…就…）', desc_en: 'Condensed clause (一…就…)'},
+
+  // ─── A是A / 一是一 / ───
+  {pattern: /[\u4e00-\u9fff]{1,4}是[\u4e00-\u9fff]{1,4}，是/g, level: 3, desc_zh: '口语格式（A是A，是B）', desc_en: 'Spoken format (A是A, 是B)'},
+
+  // ─── 用不着 / 犯不着 ───
+  {pattern: /用不着|犯不着|犯不上|大不了/g, level: 3, desc_zh: '固定短语（用不着）', desc_en: 'Fixed phrase (用不着)'},
+
+  // ─── 来得及 / 来不及 ───
+  {pattern: /来不及|来得及/g, level: 2, desc_zh: '可能补语（来不及/来得及）', desc_en: 'Potential complement (来不及/来得及)'},
+
+  // ─── 差不多 / 左右 / 上下 ───
+  {pattern: /差不多|左右|前后|上下/g, level: 2, desc_zh: '概数表达', desc_en: 'Approximate number'},
+
+  // ─── 各 / 每 ───
+  {pattern: /各[\u4e00-\u9fff]{1,4}|每[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '范围代词（各/每）', desc_en: 'Distributive pronoun (各/每)'},
+
+  // ─── 特殊结构 ───
+  {pattern: /与其说[\u4e00-\u9fff，]{1,10}不如说/g, level: 5, desc_zh: '比喻（与其说…不如说）', desc_en: 'Rather (与其说…不如说)'},
+  {pattern: /说是[\u4e00-\u9fff]{1,6}，其实/g, level: 4, desc_zh: '转折（说是…其实…）', desc_en: 'Concessive (说是…其实…)'},
 ];
 
 
@@ -399,6 +500,37 @@ const STRUCTURAL_PATTERNS = [
   // ── 自+时间兜底 ──
   { head: '自', tail: '开始', gap: {min: 1, max: 12}, exclude: '，。？！；\n', level: 5, desc_zh: '时间结构（自…开始）', desc_en: 'Time structure (自…开始)'},
   { head: '自', tail: '结束', gap: {min: 1, max: 12}, exclude: '，。？！；\n', level: 5, desc_zh: '时间结构（自…结束）', desc_en: 'Time structure (自…结束)'},
+
+  // ═══ v5.0 新增（来源：语法点检索表格） ═══
+
+  // ── 固定格式：一X也/都不… ──
+  { head: '一', tail: '都不', gap: {min: 1, max: 8}, exclude: '，。？！；\n', level: 3, desc_zh: '强调否定（一…都不…）', desc_en: 'Emphatic negation (一…都不…)'},
+  { head: '一', tail: '也不', gap: {min: 1, max: 8}, exclude: '，。？！；\n', level: 3, desc_zh: '强调否定（一…也不…）', desc_en: 'Emphatic negation (一…也不…)'},
+
+  // ── 由…组成 ──
+  { head: '由', tail: '组成', gap: {min: 2, max: 15}, exclude: '，。？！；\n', level: 4, desc_zh: '由…组成', desc_en: 'Composed of (由…组成)'},
+
+  // ── 由…负责/担任/承担 ──
+  { head: '由', tail: '负责', gap: {min: 2, max: 12}, exclude: '，。？！；\n', level: 5, desc_zh: '被动（由…负责）', desc_en: 'Passive (由…负责)'},
+
+  // ── 是…的 强调句（完整结构） ──
+  { head: '是', tail: '的', gap: {min: 3, max: 20}, exclude: '，。？！；\n', level: 4, desc_zh: '是…的强调句', desc_en: '是…的 cleft sentence'},
+
+  // ── 除了…以外 ──
+  { head: '除了', tail: '以外', gap: {min: 1, max: 12}, exclude: '，。？！；\n', level: 3, desc_zh: '除了…以外', desc_en: 'Besides (除了…以外)'},
+
+  // ── 除了…之外 ──
+  { head: '除了', tail: '之外', gap: {min: 1, max: 12}, exclude: '，。？！；\n', level: 3, desc_zh: '除了…之外', desc_en: 'Besides (除了…之外)'},
+
+  // ── 一方面…另一方面 ──
+  { head: '一方面', tail: '另一方面', gap: {min: 3, max: 15}, exclude: '，。？！；\n', level: 5, desc_zh: '并列（一方面…另一方面）', desc_en: 'Coordination (一方面…另一方面)'},
+
+  // ── 看起来/看上去 + 形容词 ──
+  { head: '看起来', tail: '很', gap: {min: 0, max: 2}, exclude: '，。？！；\n', level: 2, desc_zh: '情态（看起来很…）', desc_en: 'Modal (看起来很…)'},
+  { head: '看上去', tail: '很', gap: {min: 0, max: 2}, exclude: '，。？！；\n', level: 2, desc_zh: '情态（看上去很…）', desc_en: 'Modal (看上去很…)'},
+
+  // ── 一量比一量 递进比较 ──
+  { head: '一', tail: '比一', gap: {min: 1, max: 3}, exclude: '，。？！；\n', level: 3, desc_zh: '递进比较（一X比一X）', desc_en: 'Progressive comparative (一X比一X)'},
 ];
 
 

@@ -203,6 +203,7 @@ class GrammarAnalyzer {
     const writtenPhrases = {
       '换句话说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
       '也就是说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '就是说': { level: 3, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
       '具体来说': { level: 4, grammarPoint: '具体化标记', grammarPointEn: 'Specification marker' },
       '确切地说': { level: 4, grammarPoint: '具体化标记', grammarPointEn: 'Specification marker' },
       '举例来说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
@@ -219,6 +220,7 @@ class GrammarAnalyzer {
       '基于此': { level: 6, grammarPoint: '基于', grammarPointEn: 'Based on' },
       '值得注意的是': { level: 5, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
       '需要指出的是': { level: 5, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '现在看来': { level: 3, grammarPoint: '情态副词', grammarPointEn: 'Modal adverb' },
     };
     Object.assign(phrases, writtenPhrases);
 
@@ -226,8 +228,8 @@ class GrammarAnalyzer {
     const fixedPhrases = {
       '忍不住': { level: 3, grammarPoint: '情态（忍不住）', grammarPointEn: 'Cannot help (忍不住)' },
       '不得不': { level: 3, grammarPoint: '双重否定', grammarPointEn: 'Double negation' },
-      '来不及': { level: 3, grammarPoint: '来不及', grammarPointEn: 'Too late' },
-      '来得及': { level: 3, grammarPoint: '来得及', grammarPointEn: 'In time' },
+      '来不及': { level: 2, grammarPoint: '来不及', grammarPointEn: 'Too late' },
+      '来得及': { level: 2, grammarPoint: '来得及', grammarPointEn: 'In time' },
       '值得': { level: 3, grammarPoint: '值得', grammarPointEn: 'Worth' },
       '没想到': { level: 5, grammarPoint: '反预期（没想到）', grammarPointEn: 'Unexpected (没想到)' },
       '出乎意料': { level: 5, grammarPoint: '反预期', grammarPointEn: 'Unexpected' },
@@ -239,6 +241,72 @@ class GrammarAnalyzer {
       '所谓的': { level: 5, grammarPoint: '话语标记（所谓的）', grammarPointEn: 'Discourse marker (所谓的)' },
       '所谓的自由': { level: 5, grammarPoint: '话语标记（所谓的）', grammarPointEn: 'Discourse marker (所谓的)' },
     };
+
+    // ═══ v5.0 新增固定短语（来源：语法点检索表格） ═══
+    const newFixedPhrases = {
+      // ── 口语短语 ──
+      '不一会儿': { level: 3, grammarPoint: '口语短语（不一会儿）', grammarPointEn: 'Spoken phrase (不一会儿)' },
+      '一般来说': { level: 3, grammarPoint: '口语短语（一般来说）', grammarPointEn: 'Spoken phrase (一般来说)' },
+      '说不定': { level: 3, grammarPoint: '情态副词（说不定）', grammarPointEn: 'Modal adverb (说不定)' },
+      '看起来': { level: 2, grammarPoint: '情态副词（看起来）', grammarPointEn: 'Modal adverb (看起来)' },
+      '看上去': { level: 2, grammarPoint: '情态副词（看上去）', grammarPointEn: 'Modal adverb (看上去)' },
+      '用不着': { level: 3, grammarPoint: '固定短语（用不着）', grammarPointEn: 'Fixed phrase (用不着)' },
+      '犯不着': { level: 4, grammarPoint: '固定短语（犯不着）', grammarPointEn: 'Fixed phrase (犯不着)' },
+      '大不了': { level: 3, grammarPoint: '口语短语（大不了）', grammarPointEn: 'Spoken phrase (大不了)' },
+      '算了吧': { level: 3, grammarPoint: '口语短语（算了）', grammarPointEn: 'Spoken phrase (算了)' },
+      '得了吧': { level: 3, grammarPoint: '口语短语（得了吧）', grammarPointEn: 'Spoken phrase (得了吧)' },
+      '不敢当': { level: 3, grammarPoint: '口语短语（不敢当）', grammarPointEn: 'Spoken phrase (不敢当)' },
+      '不得了': { level: 3, grammarPoint: '口语短语（不得了）', grammarPointEn: 'Spoken phrase (不得了)' },
+      '不怎么样': { level: 3, grammarPoint: '口语短语（不怎么样）', grammarPointEn: 'Spoken phrase (不怎么样)' },
+      '那倒是': { level: 3, grammarPoint: '口语短语（那倒是）', grammarPointEn: 'Spoken phrase (那倒是)' },
+      '实在没办法': { level: 3, grammarPoint: '口语短语（实在没办法）', grammarPointEn: 'Spoken phrase (实在没办法)' },
+      '说干就干': { level: 3, grammarPoint: '口语短语（说干就干）', grammarPointEn: 'Spoken phrase (说干就干)' },
+      '想来想去': { level: 3, grammarPoint: '口语短语（想来想去）', grammarPointEn: 'Spoken phrase (想来想去)' },
+      '讨论来讨论去': { level: 4, grammarPoint: '口语短语（V来V去）', grammarPointEn: 'Spoken phrase (V来V去)' },
+      '左思右想': { level: 4, grammarPoint: '固定短语（左思右想）', grammarPointEn: 'Fixed phrase (左思右想)' },
+      '有说有笑': { level: 3, grammarPoint: '口语短语（有说有笑）', grammarPointEn: 'Spoken phrase (有说有笑)' },
+      '莫名其妙': { level: 4, grammarPoint: '成语（莫名其妙）', grammarPointEn: 'Idiom (莫名其妙)' },
+
+      // ── 情态 / 方式短语 ──
+      '差不多': { level: 2, grammarPoint: '情态副词（差不多）', grammarPointEn: 'Modal adverb (差不多)' },
+      '好不容易': { level: 3, grammarPoint: '口语短语（好不容易）', grammarPointEn: 'Spoken phrase (好不容易)' },
+      '好容易': { level: 3, grammarPoint: '口语短语（好容易）', grammarPointEn: 'Spoken phrase (好容易)' },
+      '不由得': { level: 4, grammarPoint: '情态短语（不由得）', grammarPointEn: 'Modal phrase (不由得)' },
+      '只好': { level: 3, grammarPoint: '情态短语（只好）', grammarPointEn: 'Modal phrase (只好)' },
+      '不得不说': { level: 4, grammarPoint: '双重否定', grammarPointEn: 'Double negation' },
+      '不能不说': { level: 4, grammarPoint: '双重否定', grammarPointEn: 'Double negation' },
+
+      // ── 对比 / 比较短语 ──
+      '比起': { level: 3, grammarPoint: '介词（比起）', grammarPointEn: 'Preposition (比起)' },
+      '相比之下': { level: 4, grammarPoint: '对比（相比之下）', grammarPointEn: 'Comparison (相比之下)' },
+      '与…相比': { level: 4, grammarPoint: '比较（与…相比）', grammarPointEn: 'Comparative (与…相比)' },
+      '相比之下': { level: 4, grammarPoint: '对比（相比之下）', grammarPointEn: 'Comparison (相比之下)' },
+
+      // ── 书面语 / 连接短语 ──
+      '换句话说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '事实上': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '实际上': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '换句话说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '值得注意的是': { level: 5, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '事实上': { level: 4, grammarPoint: '事实标记', grammarPointEn: 'Fact marker' },
+      '实际上': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '从…来看': { level: 5, grammarPoint: '视角标记', grammarPointEn: 'Perspective marker' },
+      '从…而言': { level: 5, grammarPoint: '视角标记', grammarPointEn: 'Perspective marker' },
+      '从…出发': { level: 5, grammarPoint: '视角标记', grammarPointEn: 'Perspective marker' },
+
+      // ── 时间 / 频率短语 ──
+      '过一会儿': { level: 2, grammarPoint: '口语短语（过一会儿）', grammarPointEn: 'Spoken phrase' },
+      '一段时间': { level: 3, grammarPoint: '时间表达', grammarPointEn: 'Time expression' },
+      '到目前为止': { level: 5, grammarPoint: '时间表达（到目前为止）', grammarPointEn: 'Time expression' },
+      '直到现在': { level: 4, grammarPoint: '时间表达（直到现在）', grammarPointEn: 'Time expression' },
+
+      // ── 强调短语 ──
+      '一点儿也不': { level: 2, grammarPoint: '强调否定', grammarPointEn: 'Emphatic negation' },
+      '一点儿也不简单': { level: 2, grammarPoint: '强调否定', grammarPointEn: 'Emphatic negation' },
+      '谁也不知道': { level: 3, grammarPoint: '强调否定', grammarPointEn: 'Emphatic negation' },
+      '什么也不懂': { level: 2, grammarPoint: '强调否定', grammarPointEn: 'Emphatic negation' },
+    };
+    Object.assign(fixedPhrases, newFixedPhrases);
     Object.assign(phrases, fixedPhrases);
 
     // Extract key phrases from grammar data examples (longer phrases first for priority)
