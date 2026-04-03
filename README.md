@@ -18,7 +18,6 @@
   <a href="#功能详解">功能详解</a> •
   <a href="#技术架构">技术架构</a> •
   <a href="#学术基础">学术基础</a> •
-  <a href="#部署指南">部署指南</a> •
   <a href="#贡献">贡献</a>
 </p>
 
@@ -181,112 +180,11 @@ function _detectModel(endpoint) {
 4. **重叠共存**：不同等级语法可同时标注
 5. **LLM 补充**：AI 用于模糊边界判断
 
-## 🚢 部署指南
-
-> **如果目标用户主要在中国大陆，不建议把 GitHub Pages、jsDelivr、unpkg 作为主站方案。** 即使代码本身没有问题，域名与境外节点也可能导致访问慢、超时或打不开。
-
-### 静态托管
-- **腾讯云 CloudBase 静态托管**：最省事，适合快速上线演示
-- **腾讯云 COS 静态网站托管**：适合纯静态站点，可配合 CDN
-- **自建服务器 / 宝塔 / Nginx**：最稳，适合长期正式使用
-- **Vercel / Netlify**：可作为海外备用站，不建议作为大陆主站
-
-### 发布前检查
-- 确保 `css/fonts.css`、`lib/chart.umd.min.js`、`lib/fonts/` 全部随站点一起发布
-- 当前版本已将页面运行依赖全部本地化，可直接静态托管
-- 如需中国大陆自定义域名，通常还需要备案
-
-
-### 自建服务器
-```nginx
-# Nginx 配置示例
-server {
-    listen 80;
-    server_name grammar.example.com;
-    root /var/www/chinese-grammar-analyzer;
-    index index.html;
-    
-    location / {
-        try_files $uri $uri/ =404;
-    }
-    
-    # 启用 gzip 压缩
-    gzip on;
-    gzip_types text/css application/javascript;
-}
-```
-
-### CDN 加速
-```html
-<!-- 使用 jsDelivr CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/username/chinese-grammar-analyzer/css/style.css">
-<script src="https://cdn.jsdelivr.net/gh/username/chinese-grammar-analyzer/js/analyzer.js"></script>
-```
-
-## 🧪 测试验证
-
-### 语法审核测试
-- **测试用例**：46个典型语法结构
-- **覆盖度**：100% 1-6级核心语法
-- **准确率**：>95% 精确匹配
-
-### 稳定性测试
-- **压力测试**：26种边界条件
-- **内存泄漏**：无内存泄漏问题
-- **响应时间**：<2秒（10,000字文本）
-
-### 浏览器兼容性
-| 浏览器 | 版本 | 支持状态 |
-|--------|------|----------|
-| Chrome | 90+ | ✅ 完全支持 |
-| Firefox | 88+ | ✅ 完全支持 |
-| Safari | 14+ | ✅ 完全支持 |
-| Edge | 90+ | ✅ 完全支持 |
-| 微信浏览器 | 最新 | ✅ 完全支持 |
-
-## 🤝 贡献
-
-### 开发流程
-1. **Fork 仓库**
-2. **创建分支** (`git checkout -b feature/新功能`)
-3. **提交更改** (`git commit -m '添加新功能'`)
-4. **推送分支** (`git push origin feature/新功能`)
-5. **发起 Pull Request**
-
-### 添加新语法点
-```javascript
-// 在 patterns-config.js 中添加
-{
-  pattern: /你的正则表达式/g,
-  name: "语法点名称",
-  level: 3, // 1-6级
-  example: "示例句子"
-}
-```
-
-### 报告问题
-请使用 [GitHub Issues](https://github.com/username/chinese-grammar-analyzer/issues) 报告：
-1. **Bug 报告**：详细描述问题 + 重现步骤
-2. **功能请求**：说明需求场景 + 预期效果
-3. **性能问题**：提供文本样例 + 浏览器信息
-
-## 📄 许可证
-
-本项目采用 **MIT 许可证** - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙏 致谢
-
-- **教育部中外语言交流合作中心**：制定《国际中文教育中文水平等级标准》
-- **厦门大学国际中文教育学院**：学术指导与验证
-- **所有贡献者**：感谢你们的代码、测试和反馈
-- **开源社区**：Chart.js、Google Fonts、jsDelivr 等优秀项目
-
 ## 📞 联系方式
 
-- **项目维护者**：[你的名字]
-- **邮箱**：[你的邮箱]
-- **GitHub**：[@你的用户名](https://github.com/你的用户名)
-- **线上地址**：请替换为你的正式可访问地址（若面向中国大陆用户，避免使用 `github.io` 作为主站）
+- **项目维护者**：Oliver Zhang
+- **邮箱**：oliz020315@gmail.com
+- **GitHub**：[@oliz020315-cpu](https://github.com/oliz020315-cpu)
 
 
 ---
