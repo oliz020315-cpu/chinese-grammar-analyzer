@@ -1,25 +1,136 @@
 /**
- * GrammarAnalyzer - Chinese Grammar Analysis Engine v4.0
- * 
- * Analyzes Chinese text against HSK Grammar Standards (GF 0025-2021)
- * 4-layer matching architecture:
- *   1. Built-in regex patterns (200+ patterns, comprehensive coverage)
- *   2. Structural Patterns (head-tail gap matching, context-aware)
- *   3. Database keyword index (from grammar point names)
- *   4. Phrase Dictionary (from examples + supplementary phrases)
- * 
- * Overlap resolution: Longest match first → structural/builtin > database
- * 
- * v4.0 changes: Major regex rewrite for higher coverage, looser matching,
- *   comprehensive "自+时间" support, gap fix in structural patterns.
+ * @module GrammarAnalyzer
+ * @description 中文语法分析引擎 v5.2
+ * 基于《国际中文教育中文水平等级标准》(GF 0025-2021)
+ *
+ * 4层匹配架构:
+ *   Phase 1: Built-in 正则 patterns (200+ 条，含成语/四字格)
+ *   Phase 1.5: 分词驱动匹配 (HSK词汇表 11000+ 词)
+ *   Phase 2: Structural Patterns (head-tail gap 上下文感知)
+ *   Phase 2.5: 句子级模式 (祈使句、感叹句、"是…的"强调句等)
+ *   Phase 2.7: 助词语境分析 (的/得/地 精准区分)
+ *   Phase 3: Database 关键词索引 (从语法点名称提取)
+ *   Phase 4: Phrase Dictionary (从例句提取 + 时间/固定短语)
+ *   Phase 5: 重叠消解 (不同等级允许共存，同等级按 source 优先级)
+ *
+ * LLM 辅助: 支持 OpenAI 兼容 API (DeepSeek/Moonshot/Qwen/GLM 等)
+ *
+ * @author 墨析 (Moxi)
+ * @license MIT
+ */
+
+/**
+ * 语法点数据条目 (来自 GRAMMAR_DATA)
+ * @typedef {Object} GrammarPoint
+ * @property {string} id - 语法点编号 (如 "三01")
+ * @property {string} name - 语法点名称
+ * @property {string} section - 所属分类路径
+ * @property {number} level - HSK 等级 (1-7)
+ * @property {string[]} examples - 例句列表
+ * @property {string} [name_en] - 英文名称 (可选)
+ */
+
+/**
+ * 匹配结果
+ * @typedef {Object} MatchResult
+ * @property {string} pattern - 匹配到的原文片段
+ * @property {string} grammarPoint - 语法点名称 (中文)
+ * @property {string} [grammarPointEn] - 语法点名称 (英文)
+ * @property {number} level - HSK 等级 (1-7)
+ * @property {number} position - 在原文中的起始位置 (0-based)
+ * @property {string} source - 匹配来源 (builtin|structural|database|phrase|segment-phrase|segment-hsk|sentence-pattern|context-particle|llm)
+ * @property {string} [gpId] - 关联的语法点ID (可选)
+ */
+
+/**
+ * 分析结果
+ * @typedef {Object} AnalysisResult
+ * @property {string} text - 原文文本
+ * @property {number} charCount - 字符数
+ * @property {number} sentenceCount - 句子数
+ * @property {MatchResult[]} matches - 匹配结果数组
+ * @property {Object.<number, number>} levelDistribution - 等级分布 {level: count}
+ * @property {number} maxLevel - 最高等级
+ * @property {number} avgLevel - 平均等级
+ * @property {number} suggestedLevel - 建议等级 (基于加权频率)
+ * @property {string[]} suggestions - 学习建议
+ * @property {boolean} [llmUsed] - 是否使用了 LLM 分析
+ * @property {string} [llmNote] - LLM 分析备注信息
+ */
+
+/**
+ * 内置正则模式
+ * @typedef {Object} BuiltinPattern
+ * @property {RegExp} pattern - 正则表达式
+ * @property {number} level - HSK 等级
+ * @property {string} desc_zh - 中文描述
+ * @property {string} desc_en - 英文描述
+ */
+
+/**
+ * 结构化模式 (头尾间距匹配)
+ * @typedef {Object} StructuralPattern
+ * @property {string} head - 匹配锚点 (头部)
+ * @property {string} tail - 匹配锚点 (尾部)
+ * @property {{min: number, max: number}} gap - 头尾之间允许的字符数范围
+ * @property {Set<string>} exclude - 中间不允许出现的字符集
+ * @property {number} level - HSK 等级
+ * @property {string} desc_zh - 中文描述
+ * @property {string} desc_en - 英文描述
+ */
+
+/**
+ * 短语字典条目
+ * @typedef {Object} PhraseEntry
+ * @property {number} level - HSK 等级
+ * @property {string} grammarPoint - 语法点名称 (中文)
+ * @property {string} grammarPointEn - 语法点名称 (英文)
+ * @property {string} [gpId] - 关联的语法点ID (可选)
+ */
+
+/**
+ * 分词 Token
+ * @typedef {Object} SegmentToken
+ * @property {string} w - 词文本
+ * @property {number} pos - 起始位置
+ * @property {number} len - 长度
+ * @property {number} level - HSK 等级
+ * @property {string} pos_tag - 词性标签
+ */
+
+/**
+ * 句子
+ * @typedef {Object} Sentence
+ * @property {string} text - 句子文本 (含标点)
+ * @property {number} start - 起始位置
+ * @property {number} end - 结束位置
+ */
+
+/**
+ * LLM 配置
+ * @typedef {Object} LLMConfig
+ * @property {string} apiKey - API 密钥
+ * @property {string} endpoint - API 端点 URL
+ * @property {string} model - 模型名称 (默认 'gpt-4o-mini')
+ * @property {string|null} customTemplate - 自定义请求模板 (含 {{text}} 占位符)
+ * @property {string|null} responsePath - 响应内容提取路径 (如 'choices[0].message.content')
  */
 
 class GrammarAnalyzer {
-  // 非补语词白名单（含"得"但不是补语结构）
+  /**
+   * 非补语词白名单——含"得"但不构成程度/状态补语结构的词。
+   * 用于过滤误匹配，如"觉得/懂得/获得/值得"等。
+   * @type {string[]}
+   */
   static NON_COMPLEMENT = (typeof window !== 'undefined' && window.MoxiPatternsConfig)
     ? window.MoxiPatternsConfig.nonComplementWords
     : ['觉得', '懂得', '晓得', '获得', '取得', '赢得', '记得', '值得', '懒得', '免得', '博得'];
 
+  /**
+   * 创建语法分析引擎实例。
+   * 初始化关键词索引、内置正则模式（预编译）、结构化模式、短语字典。
+   * @param {GrammarPoint[]} grammarData - 语法点数据数组 (GRAMMAR_DATA)
+   */
   constructor(grammarData) {
     this.grammarData = grammarData;
     this.keywordIndex = this._buildKeywordIndex();
@@ -62,9 +173,11 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Extract a value from an object by a dot/bracket path string.
-   * Examples: "choices[0].message.content", "data.result", "output.text"
-   * @returns {*} The value at the path, or '' if not found
+   * 通过点号/方括号路径字符串从嵌套对象中提取值。
+   * 支持 "choices[0].message.content"、"data.result"、"output.text" 等格式。
+   * @param {*} obj - 目标对象
+   * @param {string} path - 点号/方括号路径字符串
+   * @returns {*} 路径对应的值，未找到返回 ''
    */
   _extractByPath(obj, path) {
     if (!path || !obj) return '';
@@ -84,6 +197,11 @@ class GrammarAnalyzer {
   _C = '\\u4e00-\\u9fff\\u3000-\\u3003\\u3005-\\u303f\\uff00-\\uffef';  // CJK chars for use in regex patterns
   _N = '0-9'; // digits
 
+  /**
+   * 初始化内置正则匹配模式。
+   * 优先从外部配置 (window.MoxiPatternsConfig) 加载，否则使用回退的最小模式集。
+   * @returns {BuiltinPattern[]} 内置正则模式数组
+   */
   _initPatterns() {
     // Load from external config (patterns-config.js), with fallback to inline patterns
     if (typeof window !== 'undefined' && window.MoxiPatternsConfig && window.MoxiPatternsConfig.builtinPatterns) {
@@ -122,11 +240,16 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Match structural patterns in text.
-   * Uses head-tail gap matching with context awareness.
+   * 在文本中执行结构化模式匹配（头-尾间距匹配）。
+   * 带跨句保护（拒绝跨越句末标点的匹配）和位置去重。
+   * @param {string} text - 待分析文本
+   * @param {'zh'|'en'} lang - 输出语言
+   * @returns {MatchResult[]} 匹配结果数组 (source='structural')
    */
   _matchStructuralPatterns(text, lang) {
     const matches = [];
+    const matchedPositions = new Set(); // Track matched character positions for dedup
+    const SENTENCE_END = /[。！？!?…；;]/;
     for (const sp of this.structuralPatterns) {
       let searchFrom = 0;
       while (true) {
@@ -152,14 +275,28 @@ class GrammarAnalyzer {
           
           if (!hasExcluded) {
             const fullMatch = text.substring(headIdx, tailIdx + sp.tail.length);
-            matches.push({
-              pattern: fullMatch,
-              grammarPoint: lang === 'zh' ? sp.desc_zh : sp.desc_en,
-              level: sp.level,
-              position: headIdx,
-              source: 'structural',
-              gpId: ''
-            });
+            // Cross-sentence guard: reject matches spanning sentence-ending punctuation
+            if (!SENTENCE_END.test(fullMatch)) {
+              // Dedup: check if any character position in this match is already taken
+              let alreadyMatched = false;
+              for (let p = headIdx; p < tailIdx + sp.tail.length; p++) {
+                if (matchedPositions.has(p)) { alreadyMatched = true; break; }
+              }
+              if (!alreadyMatched) {
+                matches.push({
+                  pattern: fullMatch,
+                  grammarPoint: lang === 'zh' ? sp.desc_zh : sp.desc_en,
+                  level: sp.level,
+                  position: headIdx,
+                  source: 'structural',
+                  gpId: ''
+                });
+                // Mark positions as matched
+                for (let p = headIdx; p < tailIdx + sp.tail.length; p++) {
+                  matchedPositions.add(p);
+                }
+              }
+            }
           }
         }
         searchFrom = afterHead;
@@ -169,8 +306,9 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Build a phrase dictionary from grammar data examples and names.
-   * Enables matching of multi-word phrases from examples + time/grammar phrases.
+   * 构建短语字典。包含基础词汇、时间短语、书面语标记、固定搭配，
+   * 以及从语法数据例句中自动提取的短语。
+   * @returns {Object.<string, PhraseEntry>} 短语字典 (key=短语, value=条目)
    */
   _buildPhraseDict() {
     const phrases = {};
@@ -218,7 +356,7 @@ class GrammarAnalyzer {
       '意思': { level: 1, grammarPoint: '名词（意思）', grammarPointEn: 'Noun (意思)' },
       '名字': { level: 1, grammarPoint: '名词（名字）', grammarPointEn: 'Noun (名字)' },
       '样子': { level: 2, grammarPoint: '名词（样子）', grammarPointEn: 'Noun (样子)' },
-      '地方': { level: 1, grammarPoint: '名词（地方）', grammarPointEn: 'Noun (地方)' },
+
 
       // ── "有"+形容词（评价）───
       '有意思': { level: 2, grammarPoint: '形容词评价（有意思）', grammarPointEn: 'Adjective evaluation (有意思)' },
@@ -353,18 +491,10 @@ class GrammarAnalyzer {
 
       // ── 对比 / 比较短语 ──
       '比起': { level: 3, grammarPoint: '介词（比起）', grammarPointEn: 'Preposition (比起)' },
-      '相比之下': { level: 4, grammarPoint: '对比（相比之下）', grammarPointEn: 'Comparison (相比之下)' },
       '与…相比': { level: 4, grammarPoint: '比较（与…相比）', grammarPointEn: 'Comparative (与…相比)' },
-      '相比之下': { level: 4, grammarPoint: '对比（相比之下）', grammarPointEn: 'Comparison (相比之下)' },
 
       // ── 书面语 / 连接短语 ──
-      '换句话说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
-      '事实上': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
-      '实际上': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
-      '换句话说': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
-      '值得注意的是': { level: 5, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
-      '事实上': { level: 4, grammarPoint: '事实标记', grammarPointEn: 'Fact marker' },
-      '实际上': { level: 4, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
+      '事实标记': { level: 4, grammarPoint: '事实标记', grammarPointEn: 'Fact marker' },
       '从…来看': { level: 5, grammarPoint: '视角标记', grammarPointEn: 'Perspective marker' },
       '从…而言': { level: 5, grammarPoint: '视角标记', grammarPointEn: 'Perspective marker' },
       '从…出发': { level: 5, grammarPoint: '视角标记', grammarPointEn: 'Perspective marker' },
@@ -411,9 +541,9 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Build a keyword index from grammar data for fast text matching.
-   * Extracts Chinese character chunks (2+) from grammar point names.
-   * Lower-level entries take priority for ambiguous keywords.
+   * 从语法数据构建关键词索引，提取语法点名称中的中文片段用于快速文本匹配。
+   * 低等级条目优先（同一关键词取最低等级）。
+   * @returns {Object.<string, GrammarPoint>} 关键词索引 (key=关键词, value=语法点)
    */
   _buildKeywordIndex() {
     const index = {};
@@ -433,11 +563,10 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Lightweight Forward Maximum Match (FMM) segmenter.
-   * Uses phraseDict + HSK vocabulary dictionary for segmentation.
-   * Returns array of { w: word, pos: position, len: length, level: HSK level, pos_tag: POS tag }.
-   * 
-   * v5.1: Integrated HSK vocabulary (11000+ words) for much better segmentation coverage.
+   * 轻量级正向最大匹配 (FMM) 分词器。
+   * 融合短语字典 (phraseDict) 和 HSK 词汇表进行分词。
+   * @param {string} text - 待分词的中文文本
+   * @returns {SegmentToken[]} 分词结果数组
    */
   _segment(text) {
     // Build merged dictionary: phraseDict (grammar-specific) + HSK vocab (general)
@@ -510,9 +639,9 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Split text into sentences by punctuation.
-   * Returns array of { text, start, end }.
-   * Preserves punctuation in the sentence text.
+   * 按句末标点将文本拆分为句子数组，保留标点符号。
+   * @param {string} text - 待拆分的文本
+   * @returns {Sentence[]} 句子数组 (含 text/start/end)
    */
   _splitSentences(text) {
     const sentences = [];
@@ -537,9 +666,11 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Context-aware particle analysis (的/得/地).
-   * Analyzes surrounding characters to determine the grammatical function.
-   * Called after regex matching to refine or add particle matches.
+   * 上下文感知的结构助词（的/得/地）分析。
+   * 通过周围字符判断语法功能，在正则匹配后调用以补充或修正匹配。
+   * @param {string} text - 原文文本
+   * @param {MatchResult[]} existingMatches - 已有的匹配结果 (用于去重)
+   * @returns {MatchResult[]} 新增的匹配结果 (source='context-particle')
    */
   _analyzeParticleContext(text, existingMatches) {
     const additions = [];
@@ -619,8 +750,10 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Sentence-level pattern matching.
-   * Matches whole-sentence structures that regex can't easily capture.
+   * 句子级模式匹配。识别正则难以捕获的整句结构。
+   * 包括：祈使句、感叹句（太…了）、"是…的"强调句、"有"+形容词评价、"挺…的"结构、疑问语气（呢/吗）。
+   * @param {string} text - 待分析文本
+   * @returns {MatchResult[]} 匹配结果数组 (source='sentence-pattern')
    */
   _matchSentencePatterns(text) {
     const matches = [];
@@ -743,7 +876,12 @@ class GrammarAnalyzer {
   }
 
   /**
-   * Analyze a Chinese text for grammar points (local, no API).
+   * 分析中文文本的语法点（纯本地，无 API 调用）。
+   * 执行 6 个阶段的匹配: 内置正则 → 分词 → 结构化 → 句子模式 → 助词语境 → 数据库/短语，
+   * 最后进行重叠消解和等级分布统计。
+   * @param {string} text - 待分析的中文文本
+   * @param {'zh'|'en'} [lang='zh'] - 输出语言 ('zh' 或 'en')
+   * @returns {AnalysisResult} 分析结果
    */
   analyze(text, lang = 'zh') {
     const result = {
@@ -759,6 +897,7 @@ class GrammarAnalyzer {
     };
 
     // Phase 1: Match built-in regex patterns (pre-compiled)
+    const SENTENCE_END = /[。！？!?…；;]/;
     for (const bp of this.compiledPatterns) {
       if (!bp.regex) continue;
       try {
@@ -775,6 +914,8 @@ class GrammarAnalyzer {
           })) {
             if (matched.length === 0) regex.lastIndex++; continue;
           }
+          // Cross-sentence guard: reject matches spanning sentence-ending punctuation
+          if (matched.length > 6 && SENTENCE_END.test(matched)) continue;
           result.matches.push({
             pattern: matched,
             grammarPoint: lang === 'zh' ? bp.desc_zh : bp.desc_en,
@@ -999,9 +1140,12 @@ class GrammarAnalyzer {
   }
 
   /**
-   * LLM-assisted analysis. Sends text to an OpenAI-compatible API
-   * for deeper grammar identification. Returns additional matches.
-   * Falls back gracefully if API is unavailable.
+   * LLM 辅助分析。先执行本地分析，再调用 OpenAI 兼容 API 获取更深入的语法识别。
+   * API 不可用时优雅降级为纯本地结果。
+   * 输入上限 10000 字，超出仅使用本地分析。
+   * @param {string} text - 待分析的中文文本
+   * @param {'zh'|'en'} [lang='zh'] - 输出语言 ('zh' 或 'en')
+   * @returns {Promise<AnalysisResult>} 分析结果 (包含 llmUsed 和 llmNote 字段)
    */
   async analyzeWithLLM(text, lang = 'zh') {
     // Guard: reject extremely long inputs to prevent browser hang
@@ -1295,6 +1439,11 @@ Example output:
     return localResult;
   }
 
+  /**
+   * 将 HSK 词性标签缩写映射为中文名称。
+   * @param {string} pos - 词性标签 (如 '副', '动', '形')
+   * @returns {string} 中文名称 (如 '副词', '动词', '形容词')
+   */
   _posLabelZh(pos) {
     const map = {
       '代': '代词', '动': '动词', '形': '形容词', '副': '副词', '介': '介词',
@@ -1308,6 +1457,11 @@ Example output:
     return '词';
   }
 
+  /**
+   * 将 HSK 词性标签缩写映射为英文名称。
+   * @param {string} pos - 词性标签 (如 '副', '动', '形')
+   * @returns {string} 英文名称 (如 'Adverb', 'Verb', 'Adjective')
+   */
   _posLabelEn(pos) {
     const map = {
       '代': 'Pronoun', '动': 'Verb', '形': 'Adjective', '副': 'Adverb', '介': 'Preposition',
@@ -1321,6 +1475,12 @@ Example output:
     return 'Word';
   }
 
+  /**
+   * 基于加权频率分布计算建议的 HSK 等级 (1-6)。
+   * 使用 count² 加权，使高频等级有更大影响。
+   * @param {AnalysisResult} result - 分析结果
+   * @returns {number} 建议等级 (1-6)
+   */
   _suggestLevel(result) {
     if (!result.matches.length) return 1;
     let weightedSum = 0, totalWeight = 0;
@@ -1332,6 +1492,13 @@ Example output:
     return Math.max(1, Math.min(6, Math.round(weightedSum / totalWeight)));
   }
 
+  /**
+   * 根据分析结果生成学习建议。
+   * 包括：高级语法提示、等级分布、语法丰富度评估、难度建议。
+   * @param {AnalysisResult} result - 分析结果
+   * @param {'zh'|'en'} lang - 语言 ('zh' 或 'en')
+   * @returns {string[]} 建议文本数组
+   */
   _generateSuggestions(result, lang) {
     const suggestions = [];
     if (!result.matches.length) {

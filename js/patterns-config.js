@@ -60,18 +60,40 @@ const BUILTIN_PATTERNS = [
   {pattern: /一点儿也不[\u4e00-\u9fff]{1,4}/g, level: 2, desc_zh: '强调否定（一点儿也不…）', desc_en: 'Emphatic negation (一点儿也不…)'},
 
   // ─── 名词重叠（AA式）───
-  {pattern: /人人|天天|年年|月月|天天|个个|家家|户户|处处|步步|事事|时时|夜夜|岁岁/g, level: 1, desc_zh: '名词重叠（AA式）', desc_en: 'Noun reduplication (AA)'},
+  {pattern: /人人|天天|年年|月月|个个|家家|户户|处处|步步|事事|时时|夜夜|岁岁/g, level: 1, desc_zh: '名词重叠（AA式）', desc_en: 'Noun reduplication (AA)'},
 
   // ─── 动词重叠（AA/ABAB式）───
-  {pattern: /看看|说说|走走|试试|想想|听听|问问|笑笑|吃吃|喝喝|坐坐|等等|歇歇|聊聊|说说|读读|写写|画画|跑跑|跳跳|洗洗|歇歇|找找/g, level: 1, desc_zh: '动词重叠（AA式）', desc_en: 'Verb reduplication (AA)'},
-  {pattern: /研究研究|考虑考虑|讨论讨论|商量商量|打扫打扫|整理整理|休息休息|准备准备|锻炼锻炼|翻译翻译|复习复习|预习预习|安排安排|检查检查|调查调查|交流交流|参观参观|学习学习|认识认识|了解了解|帮助帮助|介绍介绍|收拾收拾|修理修理|结婚结婚|散步散步|运动运动|锻炼锻炼|联系联系|解释解释|计划计划|设计设计|体验体验/g, level: 2, desc_zh: '动词重叠（ABAB式）', desc_en: 'Verb reduplication (ABAB)'},
+  {pattern: /看看|说说|走走|试试|想想|听听|问问|笑笑|吃吃|喝喝|坐坐|等等|歇歇|聊聊|读读|写写|画画|跑跑|跳跳|洗洗|找找/g, level: 1, desc_zh: '动词重叠（AA式）', desc_en: 'Verb reduplication (AA)'},
+  {pattern: /研究研究|考虑考虑|讨论讨论|商量商量|打扫打扫|整理整理|休息休息|准备准备|锻炼锻炼|翻译翻译|复习复习|预习预习|安排安排|检查检查|调查调查|交流交流|参观参观|学习学习|认识认识|了解了解|帮助帮助|介绍介绍|收拾收拾|修理修理|结婚结婚|散步散步|运动运动|联系联系|解释解释|计划计划|设计设计|体验体验/g, level: 2, desc_zh: '动词重叠（ABAB式）', desc_en: 'Verb reduplication (ABAB)'},
 
-  // ─── 量词重叠（AABB式）───
-  {pattern: /个个|条条|种种|层层|堆堆|排排|颗颗|串串|把把|块块|片片/g, level: 2, desc_zh: '量词重叠（AA式）', desc_en: 'Classifier reduplication (AA)'},
+  // ─── 量词重叠（AA式）───
+  {pattern: /条条|种种|层层|堆堆|排排|颗颗|串串|把把|块块|片片/g, level: 2, desc_zh: '量词重叠（AA式）', desc_en: 'Classifier reduplication (AA)'},
 
   // ─── 祈使句（吧/啊字句）───
   {pattern: /[\u4e00-\u9fff]{1,4}(吧|呗)[！!。.？?，,]*/g, level: 2, desc_zh: '祈使句（…吧）', desc_en: 'Imperative (…吧)'},
   {pattern: /[\u4e00-\u9fff]{1,6}(啊|嘛)[！!。.？?，,]*/g, level: 1, desc_zh: '语气助词（啊/嘛）', desc_en: 'Modal particle (啊/嘛)'},
+
+  // ─── 兼语句（请/让/叫/使/派 + 人 + 动词）───
+  {pattern: /请[\u4e00-\u9fff]{1,4}[\u4e00-\u9fff]{2,}/g, level: 3, desc_zh: '兼语句（请+人+V）', desc_en: 'Pivotal sentence (请+sb+V)'},
+  {pattern: /(?<![别])让[\u4e00-\u9fff]{1,4}[\u4e00-\u9fff]{2,}/g, level: 3, desc_zh: '兼语句（让+人+V）', desc_en: 'Pivotal sentence (让+sb+V)'},
+  {pattern: /叫[\u4e00-\u9fff]{1,4}[\u4e00-\u9fff]{2,}/g, level: 3, desc_zh: '兼语句（叫+人+V）', desc_en: 'Pivotal sentence (叫+sb+V)'},
+  {pattern: /使[\u4e00-\u9fff]{2,10}/g, level: 4, desc_zh: '兼语句（使+宾+V）', desc_en: 'Pivotal sentence (使+obj+V)'},
+  {pattern: /派[\u4e00-\u9fff]{1,4}[\u4e00-\u9fff]{2,}/g, level: 4, desc_zh: '兼语句（派+人+V）', desc_en: 'Pivotal sentence (派+sb+V)'},
+
+  // ─── 连动句（V1 + V2，同一主语连续动作）───
+  {pattern: /(?<![别让叫请使派])[\u4e00-\u9fff]{1,4}[上下进出回过起][\u4e00-\u9fff]{2,6}/g, level: 3, desc_zh: '连动句（V1+趋向+V2）', desc_en: 'Serial verb (V1+dir+V2)'},
+
+  // ─── "是"字句 / "有"字句 ───
+  {pattern: /(?<![不没])是[\u4e00-\u9fff]{1,8}/g, level: 1, desc_zh: '"是"字句', desc_en: '"是" sentence'},
+  {pattern: /(?<!没)有[\u4e00-\u9fff]{1,4}/g, level: 1, desc_zh: '"有"字句', desc_en: '"有" sentence'},
+
+  // ─── 口语话语标记 ───
+  {pattern: /你知道吗|我跟你说|说真的|老实说|说实话|换句话说|也就是说/g, level: 3, desc_zh: '口语话语标记', desc_en: 'Spoken discourse marker'},
+  {pattern: /怎么说呢|话又说回来|话说回来|不管怎么说/g, level: 4, desc_zh: '口语话语标记（转折）', desc_en: 'Spoken discourse marker (concessive)'},
+
+  // ─── 书面语动词（教学高频）───
+  {pattern: /促进|推动|加强|提高|改善|实现|达到|满足|解决|处理|面临|承担|负责|适应|调整|改革|发展|建立|扩大|利用|采用|推行|执行|贯彻|落实|优化/g, level: 5, desc_zh: '书面语动词', desc_en: 'Written verb'},
+  {pattern: /认为|指出|强调|表明|说明|显示|证明|反映|体现|表示|主张|提出|分析|探讨|研究|讨论|描述|解释/g, level: 5, desc_zh: '学术表达动词', desc_en: 'Academic verb'},
 
   // ─── 形容词重叠（AABB/ABAB式）───
   {pattern: /高高兴兴|开开心心|快快乐乐|干干净净|整整齐齐|安安静静|舒舒服服|清清楚楚|明明白白|简简单单|热热闹闹|漂漂亮亮|白白胖胖|大大小小|老老实实|认认真真|踏踏实实|仔仔细细|马马虎虎|平平淡淡|普普通通|清清爽爽|端端正正|稳稳当当/g, level: 2, desc_zh: '形容词重叠（AABB式）', desc_en: 'Adjective reduplication (AABB)'},
@@ -186,9 +208,8 @@ const BUILTIN_PATTERNS = [
   // 结果补语：V+结果词（不含"好"，因为"好吃/好看"是形容词不是结果补语）
   // 要求：前面的动词至少1字 + 结果词本身 = 总匹配≥2字，避免"明"等单字误匹配
   {pattern: /(?<![觉懂晓获取赢记值懒免博得使显舍得忍要明天昨后])(?<=[\u4e00-\u9fff]{1,2})[到见完错对住懂透明白清楚干净走跑开](?=[的了着过\u4e00-\u9fff])/g, level: 2, desc_zh: '结果补语（V+结果）', desc_en: 'Result complement (V+result)'},
-  {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '方式副词（看起来/看上去）', desc_en: 'Manner adverb (看起来/看上去)'},
+  {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '情态副词（看起来/看上去）', desc_en: 'Modal adverb (看起来/看上去)'},
   {pattern: /一般来说|总的来说|现在看来/g, level: 3, desc_zh: '方式副词（一般来说）', desc_en: 'Manner adverb (一般来说)'},
-  {pattern: /看起来|看上去|看起来有点儿/g, level: 2, desc_zh: '情态副词（看起来）', desc_en: 'Modal adverb (看起来)'},
 
   // ═══════════════════════════════════════════════════════════════
   // Level 3 — 中级 Intermediate (HSK 3-4)
@@ -268,8 +289,7 @@ const BUILTIN_PATTERNS = [
   {pattern: /X什么(啊)?/g, level: 3, desc_zh: '口语格式（X什么）', desc_en: 'Spoken format (X什么)'},
 
   // ─── 强调 / 固定格式 ───
-  {pattern: /是[\u4e00-\u9fff，]{2,20}的/g, level: 4, desc_zh: '是…的 强调句', desc_en: '是…的 cleft sentence'},
-  {pattern: /连[\u4e00-\u9fff，]{1,10}也[没不]/g, level: 3, desc_zh: '连……也（不/没）', desc_en: '连…也 (Even…)'},
+  // "连……也（不/没）"由结构模式覆盖（更精确的gap匹配）
   {pattern: /值得/g, level: 3, desc_zh: '值得', desc_en: '值得 (Worth)'},
   {pattern: /来不及|来得及/g, level: 3, desc_zh: '来得及/来不及', desc_en: '来得及/来不及'},
   {pattern: /忍不住|不得不|不能不/g, level: 3, desc_zh: '双重否定/情态', desc_en: 'Double negation'},
@@ -333,8 +353,7 @@ const BUILTIN_PATTERNS = [
   // ═══════════════════════════════════════════════════════════════
 
   // ─── 转折 / 反预期 ───
-  {pattern: /然而|不过|可是/g, level: 5, desc_zh: '转折（然而/不过/可是）', desc_en: 'Transition (然而/不过)'},
-  {pattern: /恰恰相反|恰恰是|恰恰/g, level: 5, desc_zh: '反预期（恰恰）', desc_en: 'Counter-expectation (恰恰)'},
+  {pattern: /恰恰相反|恰恰/g, level: 5, desc_zh: '反预期（恰恰）', desc_en: 'Counter-expectation (恰恰)'},
   {pattern: /反而|反倒/g, level: 5, desc_zh: '反转（反而）', desc_en: 'Reversal (反而)'},
   {pattern: /不料|没想到|谁知|谁料/g, level: 5, desc_zh: '反预期（不料/没想到）', desc_en: 'Counter-expectation (不料)'},
   {pattern: /尽管如此|即便如此|虽然如此/g, level: 5, desc_zh: '让步总结', desc_en: 'Concessive summary'},
@@ -358,11 +377,11 @@ const BUILTIN_PATTERNS = [
 
   // ─── 强调断言 ───
   {pattern: /不可否认|毋庸置疑|不言而喻/g, level: 5, desc_zh: '强调断言', desc_en: 'Emphatic assertion'},
-  {pattern: /不切实际|不约而同|不言而喻|不可思议|不自量力|不以为然|不知所措|不遗余力|不寒而栗|不以为意|不胫而走|不速之客|不可思议|一尘不染|一举两得|一鸣惊人|一举成名|一帆风顺|一蹴而就|一分为二|一针见血|心不在焉|画蛇添足|守株待兔|亡羊补牢|揠苗助长|刻舟求剑|对牛弹琴|杯弓蛇影|叶公好龙|井底之蛙|自相矛盾|掩耳盗铃|塞翁失马|望梅止渴|纸上谈兵|破釜沉舟|卧薪尝胆|四面楚歌|负荆请罪|完璧归赵|毛遂自荐|三顾茅庐|狐假虎威|画龙点睛|胸有成竹|津津有味|小心翼翼|自言自语|自由自在|各种各样|名副其实|理直气壮|理所当然|有声有色|入乡随俗|见义勇为|取长补短|异口同声|千方百计|深思熟虑|从容不迫|持之以恒|自强不息|兢兢业业|废寝忘食|争先恐后|奋发图强|众志成城|万众一心|齐心协力|和衷共济|同舟共济|相辅相成|相得益彰|相映成趣|举一反三|触类旁通|融会贯通|豁然开朗|恍然大悟|喜出望外|目瞪口呆|哑口无言|啼笑皆非|哭笑不得|忍俊不禁|莞尔一笑|喜忧参半|悲喜交加|乐此不疲|乐在其中|津津乐道|赞不绝口|叹为观止|叹为观止|拍案叫绝|拍手称快|爱不释手|依依不舍|恋恋不舍|念念不忘|朝思暮想|魂牵梦萦|心驰神往|梦寐以求|望眼欲穿|翘首以盼/g, level: 5, desc_zh: '成语/四字格', desc_en: 'Idiom / Four-character expression'},
+  {pattern: /不切实际|不约而同|不言而喻|不可思议|不自量力|不以为然|不知所措|不遗余力|不寒而栗|不以为意|不胫而走|不速之客|一尘不染|一举两得|一鸣惊人|一举成名|一帆风顺|一蹴而就|一分为二|一针见血|心不在焉|画蛇添足|守株待兔|亡羊补牢|揠苗助长|刻舟求剑|对牛弹琴|杯弓蛇影|叶公好龙|井底之蛙|自相矛盾|掩耳盗铃|塞翁失马|望梅止渴|纸上谈兵|破釜沉舟|卧薪尝胆|四面楚歌|负荆请罪|完璧归赵|毛遂自荐|三顾茅庐|狐假虎威|画龙点睛|胸有成竹|津津有味|小心翼翼|自言自语|自由自在|各种各样|名副其实|理直气壮|理所当然|有声有色|入乡随俗|见义勇为|取长补短|异口同声|千方百计|深思熟虑|从容不迫|持之以恒|自强不息|兢兢业业|废寝忘食|争先恐后|奋发图强|众志成城|万众一心|齐心协力|和衷共济|同舟共济|相辅相成|相得益彰|相映成趣|举一反三|触类旁通|融会贯通|豁然开朗|恍然大悟|喜出望外|目瞪口呆|哑口无言|啼笑皆非|哭笑不得|忍俊不禁|莞尔一笑|喜忧参半|悲喜交加|乐此不疲|乐在其中|津津乐道|赞不绝口|叹为观止|拍案叫绝|拍手称快|爱不释手|依依不舍|恋恋不舍|念念不忘|朝思暮想|魂牵梦萦|心驰神往|梦寐以求|望眼欲穿|翘首以盼/g, level: 5, desc_zh: '成语/四字格', desc_en: 'Idiom / Four-character expression'},
   {pattern: /所谓/g, level: 5, desc_zh: '话语标记（所谓）', desc_en: 'Discourse marker (所谓)'},
 
   // ─── 并列关联 ───
-  {pattern: /一方面[\u4e00-\u9fff，]{1,12}另一方面/g, level: 5, desc_zh: '并列（一方面…另一方面）', desc_en: 'Coordination (一方面…另一方面)'},
+  // "一方面…另一方面"由结构模式覆盖（更精确的gap匹配）
   {pattern: /既[\u4e00-\u9fff，]{0,5}又[\u4e00-\u9fff，]{0,5}|既[\u4e00-\u9fff，]{0,5}也[\u4e00-\u9fff，]{0,5}/g, level: 5, desc_zh: '并列（既…又/也）', desc_en: 'Coordination (既…又)'},
 
   // ─── 书面否定 ───
@@ -426,7 +445,6 @@ const BUILTIN_PATTERNS = [
 
   // ─── 目的 / 结构 ───
   {pattern: /以期|旨在/g, level: 6, desc_zh: '目的（以期）', desc_en: 'Purpose (以期)'},
-  {pattern: /一方面[\u4e00-\u9fff，]{1,15}另一方面/g, level: 6, desc_zh: '高级并列', desc_en: 'Advanced coordination'},
   {pattern: /处于[\u4e00-\u9fff，]{1,10}状态|处于[\u4e00-\u9fff，]{1,10}阶段/g, level: 6, desc_zh: '状态表达', desc_en: 'State expression'},
 
   // ─── 视角 / 限定表达 ───
@@ -448,9 +466,6 @@ const BUILTIN_PATTERNS = [
   {pattern: /但凡|凡是/g, level: 6, desc_zh: '条件（但凡/凡是）', desc_en: 'Condition (但凡/凡是)'},
   {pattern: /竟[\u4e00-\u9fff，]{0,4}|竟然[\u4e00-\u9fff，]{0,6}|居然[\u4e00-\u9fff，]{0,6}/g, level: 6, desc_zh: '意外（竟然/居然）', desc_en: 'Unexpected (竟然/居然)'},
 
-  // ─── 递进变体 ───
-  {pattern: /甚至[\u4e00-\u9fff]{0,4}都/g, level: 5, desc_zh: '递进（甚至…都）', desc_en: 'Progressive (甚至…都)'},
-
   // ═══════════════════════════════════════════════════════════════
   // v5.0 — 新增模式（来源：语法点检索表格 1488 条新例句）
   // ═══════════════════════════════════════════════════════════════
@@ -460,9 +475,6 @@ const BUILTIN_PATTERNS = [
 
   // ─── 有+量词+名（评价达到） ───
   {pattern: /有[\u4e00-\u9fff0-9]{1,4}(高|长|远|重|多|深|厚|宽|大|岁)/g, level: 2, desc_zh: '评价句（有…高/多）', desc_en: 'Evaluation (有…高)'},
-
-  // ─── 由…组成 ───
-  {pattern: /由[\u4e00-\u9fff，]{1,10}组成/g, level: 4, desc_zh: '由…组成', desc_en: 'Composed of (由…组成)'},
 
   // ─── 对…来说 ───
   {pattern: /对[\u4e00-\u9fff]{1,8}来说/g, level: 3, desc_zh: '对…来说', desc_en: 'For… (对…来说)'},
@@ -526,8 +538,9 @@ const STRUCTURAL_PATTERNS = [
   { head: '连', tail: '也', gap: {min: 1, max: 12}, exclude: '，。？！；\n', level: 3, desc_zh: '连…也', desc_en: '连…也 (Even…)'},
 
   // ── 补语兜底 ──
-  { head: '看得', tail: '见', gap: {min: 0, max: 3}, exclude: '，。？！；\n', level: 2, desc_zh: '可能补语（看得见）', desc_en: 'Potential complement (看得见)'},
-  { head: '听', tail: '得懂', gap: {min: 0, max: 3}, exclude: '，。？！；\n', level: 2, desc_zh: '可能补语（听得懂）', desc_en: 'Potential complement (听得懂)'},
+  // 注意：看得见 (head"看得"+tail"见"，gap=0)；听得懂 (head"听"+tail"得懂"，gap=0)
+  { head: '看得', tail: '见', gap: {min: 0, max: 0}, exclude: '，。？！；\n', level: 2, desc_zh: '可能补语（看得见）', desc_en: 'Potential complement (看得见)'},
+  { head: '听', tail: '得懂', gap: {min: 0, max: 0}, exclude: '，。？！；\n', level: 2, desc_zh: '可能补语（听得懂）', desc_en: 'Potential complement (听得懂)'},
 
   // ── 自+时间兜底 ──
   { head: '自', tail: '开始', gap: {min: 1, max: 12}, exclude: '，。？！；\n', level: 5, desc_zh: '时间结构（自…开始）', desc_en: 'Time structure (自…开始)'},
