@@ -127,6 +127,22 @@ class GrammarAnalyzer {
     : ['觉得', '懂得', '晓得', '获得', '取得', '赢得', '记得', '值得', '懒得', '免得', '博得'];
 
   /**
+   * 匹配来源优先级映射（数值越大优先级越高）。
+   * 统一维护，避免在多处重复定义。
+   * @type {Object.<string, number>}
+   */
+  static SOURCE_PRIORITY = {
+    llm: 5,
+    'sentence-pattern': 3.8,
+    'segment-phrase': 3.5,
+    structural: 3,
+    'context-particle': 3.2,
+    builtin: 2,
+    'segment-hsk': 1.5,
+    database: 1
+  };
+
+  /**
    * 创建语法分析引擎实例。
    * 初始化关键词索引、内置正则模式（预编译）、结构化模式、短语字典。
    * @param {GrammarPoint[]} grammarData - 语法点数据数组 (GRAMMAR_DATA)
@@ -251,6 +267,11 @@ class GrammarAnalyzer {
     const matchedPositions = new Set(); // Track matched character positions for dedup
     const SENTENCE_END = /[。！？!?…；;]/;
     for (const sp of this.structuralPatterns) {
+      // 兼容 exclude 为字符串或 Set 两种格式
+      const excludeSet = sp.exclude instanceof Set
+        ? sp.exclude
+        : new Set(typeof sp.exclude === 'string' ? [...sp.exclude] : []);
+
       let searchFrom = 0;
       while (true) {
         const headIdx = text.indexOf(sp.head, searchFrom);
@@ -271,7 +292,7 @@ class GrammarAnalyzer {
         if (tailIdx !== -1) {
           // Check that the gap doesn't contain excluded characters
           const gapContent = text.substring(afterHead, tailIdx);
-          const hasExcluded = [...sp.exclude].some(ch => gapContent.includes(ch));
+          const hasExcluded = [...gapContent].some(ch => excludeSet.has(ch));
           
           if (!hasExcluded) {
             const fullMatch = text.substring(headIdx, tailIdx + sp.tail.length);
@@ -668,81 +689,85 @@ class GrammarAnalyzer {
   /**
    * 上下文感知的结构助词（的/得/地）分析。
    * 通过周围字符判断语法功能，在正则匹配后调用以补充或修正匹配。
+   *
+   * - 地：检测 "Adj/Adv + 地 + V" 方式状语结构（至少前后各有一个汉字）
+   * - 的：检测句末"是…的"强调句（在之前的逻辑基础上实际写入匹配）
+   *
    * @param {string} text - 原文文本
    * @param {MatchResult[]} existingMatches - 已有的匹配结果 (用于去重)
    * @returns {MatchResult[]} 新增的匹配结果 (source='context-particle')
    */
   _analyzeParticleContext(text, existingMatches) {
     const additions = [];
+    // 用 "起始位置-pattern" 组合键去重，与其他阶段保持一致
     const existingPositions = new Set(existingMatches.map(m => m.position + '-' + m.pattern));
 
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
-      if (ch !== '的' && ch !== '得' && ch !== '地') continue;
 
-      const prevCh = i > 0 ? text[i - 1] : '';
-      const nextCh = i < text.length - 1 ? text[i + 1] : '';
-      const prev2 = i > 1 ? text[i - 2] : '';
-      const next2 = i < text.length - 2 ? text[i + 2] : '';
-
+      // ─── 地：方式状语结构 Adj/Adv + 地 + V ────────────────
+      // 条件：前面至少有一个汉字，后面至少有两个汉字（V + 另一个字）
       if (ch === '地') {
-        // 地：前面应该是修饰语（副词/形容词），后面应该是动词
-        // Pattern: 副词/形容词 + 地 + 动词
-        if (nextCh && /[\u4e00-\u9fff]/.test(nextCh)) {
-          // Check if this is already matched
-          const key = (i - 2) + '-';
-          const matchLen = Math.min(i + 3, text.length) - Math.max(0, i - 2);
-          const contextText = text.substring(Math.max(0, i - 2), Math.min(i + 3, text.length));
-          // Only add if we see a clear Adverb+地+Verb pattern
-          if (/[\u4e00-\u9fff]地[\u4e00-\u9fff]{2,}/.test(text.substring(i - 1, i + 4))) {
-            const matchStart = Math.max(0, i - 1);
-            const matchEnd = Math.min(text.length, i + 3);
-            const matchText = text.substring(matchStart, matchEnd);
-            if (!existingPositions.has(matchStart + '-' + matchText)) {
+        const prevCh = i > 0 ? text[i - 1] : '';
+        const afterSlice = text.substring(i + 1, i + 4); // 最多向后看 3 个字
+
+        if (
+          /[\u4e00-\u9fff]/.test(prevCh) &&
+          /^[\u4e00-\u9fff]{2,}/.test(afterSlice)
+        ) {
+          // 取前 1 个字 + "地" + 后 2 个字作为代表性片段
+          const matchStart = i - 1;
+          const matchEnd = Math.min(text.length, i + 3);
+          const matchText = text.substring(matchStart, matchEnd);
+          const key = matchStart + '-' + matchText;
+          if (!existingPositions.has(key)) {
+            additions.push({
+              pattern: matchText,
+              grammarPoint: '结构助词（…地…）',
+              grammarPointEn: 'Structural particle (…地…)',
+              level: 3,
+              position: matchStart,
+              source: 'context-particle'
+            });
+            existingPositions.add(key);
+          }
+        }
+      }
+
+      // ─── 的：句末"是…的"强调句 ──────────────────────────
+      // 条件：句末的"的"，且前文（20字内）存在"是"
+      if (ch === '的') {
+        const isAtSentenceEnd = (i === text.length - 1) ||
+          /[。！？!?\s]/.test(text[i + 1]);
+        if (!isAtSentenceEnd) continue;
+
+        const prevCh = i > 0 ? text[i - 1] : '';
+        if (!/[\u4e00-\u9fff]/.test(prevCh)) continue;
+
+        // 向前扫描（最多 20 字）寻找"是"
+        let shiIdx = -1;
+        for (let j = i - 1; j >= Math.max(0, i - 20); j--) {
+          if (text[j] === '是') { shiIdx = j; break; }
+          // 遇到句末标点则停止（不跨句）
+          if (/[。！？!?；;…]/.test(text[j])) break;
+        }
+
+        if (shiIdx >= 0) {
+          const matchText = text.substring(shiIdx, i + 1);
+          if (matchText.length >= 3 && matchText.length <= 25) {
+            const key = shiIdx + '-' + matchText;
+            if (!existingPositions.has(key)) {
               additions.push({
                 pattern: matchText,
-                grammarPoint: '结构助词（…地…）',
-                grammarPointEn: 'Structural particle (…地…)',
-                level: 3,
-                position: matchStart,
+                grammarPoint: '是…的强调句',
+                grammarPointEn: '是…的 cleft sentence',
+                level: 4,
+                position: shiIdx,
                 source: 'context-particle'
               });
+              existingPositions.add(key);
             }
           }
-        }
-      }
-
-      if (ch === '的' && !nextCh) {
-        // 句末"的"：可能是省略定语的"是…的"强调句
-        // e.g., "我是昨天来的"
-        if (prevCh && /[\u4e00-\u9fff]/.test(prevCh)) {
-          // Look back for "是"
-          let foundShi = false;
-          for (let j = i - 2; j >= Math.max(0, i - 20); j--) {
-            if (text[j] === '是' && (j === 0 || /[\u4e00-\u9fff，]/.test(text[j - 1]) || text[j - 1] === '，')) {
-              foundShi = true;
-              break;
-            }
-            if (/[\u4e00-\u9fff]{1,4}/.test(text.substring(j, j + 1)) === false) break;
-          }
-          if (foundShi) {
-            // This is a "是...的" pattern at sentence end
-            // Don't add duplicate if already matched
-          }
-        }
-      }
-
-      if (ch === '呢') {
-        // 呢：上下文判断
-        // 句末 + 疑问号 → 疑问语气词
-        // 句中 + 前面有动词 → "正在...呢"持续态
-        if (nextCh === '？' || nextCh === '?') {
-          // Already handled by regex, skip
-        } else if (/[，。！?！\s]/.test(nextCh)) {
-          // 句末但不是疑问 → 可能是"还有呢"类
-        } else if (/[\u4e00-\u9fff]/.test(nextCh)) {
-          // 句中的"呢" → 疑问/列举
-          // e.g., "你觉得呢？"
         }
       }
     }
@@ -1050,50 +1075,8 @@ class GrammarAnalyzer {
       }
     }
 
-    // Phase 5: Remove overlapping matches with source priority
-    // Source priority: phrase(4) > structural(3) > builtin(2) > database(1)
-    const SOURCE_PRIORITY = { phrase: 4, structural: 3, builtin: 2, database: 1, 'segment-phrase': 3.5, 'segment-hsk': 1.5, 'sentence-pattern': 3.8, 'context-particle': 3.2 };
-    const srcPrio = (m) => SOURCE_PRIORITY[m.source] || 0;
-    // Strategy: Sort by position → source priority desc → length desc → level desc.
-    // Overlap resolution:
-    //   - If two matches have DIFFERENT levels, BOTH can coexist (different grammar layers)
-    //   - If same level + overlap: keep higher source priority, then longer
-    result.matches.sort((a, b) => a.position - b.position || srcPrio(b) - srcPrio(a) || b.pattern.length - a.pattern.length || b.level - a.level);
-    const filtered = [];
-    for (let i = 0; i < result.matches.length; i++) {
-      const m = result.matches[i];
-      let dominated = false;
-      for (let j = 0; j < filtered.length; j++) {
-        const f = filtered[j];
-        const fStart = f.position, fEnd = f.position + f.pattern.length;
-        const mStart = m.position, mEnd = m.position + m.pattern.length;
-        const overlap = Math.max(0, Math.min(fEnd, mEnd) - Math.max(fStart, mStart));
-        const shorterLen = Math.min(f.pattern.length, m.pattern.length);
-
-        // No overlap at all — keep both
-        if (overlap === 0) continue;
-
-        // Different levels → allow coexistence (different grammar layers)
-        if (f.level !== m.level) continue;
-
-        // Same level: higher source priority wins
-        const fP = srcPrio(f), mP = srcPrio(m);
-        if (fP > mP) { dominated = true; break; }
-        if (mP > fP) { filtered[j] = m; dominated = true; break; }
-
-        // Same level + same source priority: if one fully contains the other, keep the longer
-        if (mStart >= fStart && mEnd <= fEnd && m.pattern.length < f.pattern.length) { dominated = true; break; }
-        if (fStart >= mStart && fEnd <= mEnd && f.pattern.length < m.pattern.length) { filtered[j] = m; dominated = true; break; }
-
-        // Same level + heavy overlap (>50% of shorter): keep the longer one
-        if (overlap > shorterLen * 0.5) {
-          if (m.pattern.length >= f.pattern.length) { filtered[j] = m; }
-          dominated = true; break;
-        }
-      }
-      if (!dominated) filtered.push(m);
-    }
-    result.matches = filtered;
+    // Phase 5: 重叠消解（统一通过 _resolveOverlaps 处理）
+    result.matches = this._resolveOverlaps(result.matches);
 
     // Phase 5.5: Post-processing — remove matches that are substrings of higher-quality matches
     // E.g., if "明天" (phrase, L1) is matched and "明" (builtin result complement, L2) overlaps, keep "明天"
@@ -1336,7 +1319,7 @@ Example output:
       llmMatches = llmMatches.filter(m => m.pattern && m.grammarPoint && m.level).map(m => ({
         pattern: String(m.pattern),
         grammarPoint: String(m.grammarPoint),
-        level: Math.max(1, Math.min(6, parseInt(m.level) || 1)),
+        level: Math.max(1, Math.min(6, parseInt(m.level, 10) || 1)),
         position: typeof m.position === 'number' ? m.position : -1,
         gpId: m.gpId || ''
       }));
@@ -1350,29 +1333,31 @@ Example output:
 
       for (const lm of llmMatches) {
         if (lm.pattern && lm.grammarPoint && lm.level) {
-          // Position validation: verify pattern is actually a substring of the original text
-          let validPos = typeof lm.position === 'number' ? lm.position : -1;
-          if (validPos < 0 || !text.includes(lm.pattern)) {
-            // Try to find the pattern in text
-            const found = text.indexOf(lm.pattern);
-            if (found !== -1) {
-              validPos = found;
-            } else {
-              continue; // Skip patterns not found in text
-            }
-          } else if (text.substring(validPos, validPos + lm.pattern.length) !== lm.pattern) {
-            // Position doesn't match — try to find correct position
-            const found = text.indexOf(lm.pattern);
-            validPos = found !== -1 ? found : -1;
-            if (validPos < 0) continue;
+          // 找到文本中该 pattern 的所有出现位置，选取与 LLM 报告位置最近的那个
+          // 这样可以正确处理同一词组在文本中多次出现的情形
+          const allOccurrences = [];
+          let searchIdx = 0;
+          while (true) {
+            const found = text.indexOf(lm.pattern, searchIdx);
+            if (found === -1) break;
+            allOccurrences.push(found);
+            searchIdx = found + 1;
           }
+
+          if (allOccurrences.length === 0) continue; // 文本中不存在该 pattern，跳过
+
+          // 选取距离 LLM 报告位置最近的出现
+          const reportedPos = lm.position >= 0 ? lm.position : 0;
+          let validPos = allOccurrences.reduce((best, cur) =>
+            Math.abs(cur - reportedPos) < Math.abs(best - reportedPos) ? cur : best
+          );
 
           const key = lm.pattern + validPos;
           if (!localPatterns.has(key)) {
             localResult.matches.push({
               pattern: lm.pattern,
               grammarPoint: lm.grammarPoint,
-              level: Math.max(1, Math.min(6, parseInt(lm.level) || 1)),
+              level: Math.max(1, Math.min(6, parseInt(lm.level, 10) || 1)),
               position: validPos,
               source: 'llm',
               gpId: lm.gpId || ''
@@ -1382,36 +1367,8 @@ Example output:
         }
       }
 
-      // Re-run Phase 5 overlap resolution on merged results (with source priority)
-      const llmSrcPrio = (m) => ({ phrase: 4, structural: 3, builtin: 2, database: 1, llm: 5, 'segment-phrase': 3.5, 'segment-hsk': 1.5, 'sentence-pattern': 3.8, 'context-particle': 3.2 }[m.source] || 0);
-      localResult.matches.sort((a, b) => a.position - b.position || llmSrcPrio(b) - llmSrcPrio(a) || b.pattern.length - a.pattern.length || b.level - a.level);
-      const mergedFiltered = [];
-      for (let i = 0; i < localResult.matches.length; i++) {
-        const m = localResult.matches[i];
-        let dominated = false;
-        for (let j = 0; j < mergedFiltered.length; j++) {
-          const f = mergedFiltered[j];
-          const fStart = f.position, fEnd = f.position + f.pattern.length;
-          const mStart = m.position, mEnd = m.position + m.pattern.length;
-          if (mStart < 0) continue; // Skip invalid positions
-          const overlap = Math.max(0, Math.min(fEnd, mEnd) - Math.max(fStart, mStart));
-          const shorterLen = Math.min(f.pattern.length, m.pattern.length);
-          if (overlap === 0) continue;
-          if (f.level !== m.level) continue; // Different levels → coexist
-          // Source priority: llm > phrase > structural > builtin > database
-          const fp = llmSrcPrio(f), mp = llmSrcPrio(m);
-          if (fp > mp) { dominated = true; break; }
-          if (mp > fp) { mergedFiltered[j] = m; dominated = true; break; }
-          if (mStart >= fStart && mEnd <= fEnd && m.pattern.length < f.pattern.length) { dominated = true; break; }
-          if (fStart >= mStart && fEnd <= mEnd && f.pattern.length < m.pattern.length) { mergedFiltered[j] = m; dominated = true; break; }
-          if (overlap > shorterLen * 0.5) {
-            if (m.pattern.length >= f.pattern.length) { mergedFiltered[j] = m; }
-            dominated = true; break;
-          }
-        }
-        if (!dominated) mergedFiltered.push(m);
-      }
-      localResult.matches = mergedFiltered;
+      // Re-run Phase 5 重叠消解（复用统一方法，保持与本地分析一致）
+      localResult.matches = this._resolveOverlaps(localResult.matches);
 
       // Re-sort, recalculate
       localResult.matches.sort((a, b) => a.position - b.position);
@@ -1439,19 +1396,26 @@ Example output:
     return localResult;
   }
 
+  // ── 词性标签映射（静态 Map，避免每次调用重建对象）──────────────────
+  static _POS_ZH = new Map([
+    ['时间', '时间词'], ['处所', '处所词'], ['方位', '方位词'], ['区别', '区别词'], ['拟声', '拟声词'],
+    ['代', '代词'], ['动', '动词'], ['形', '形容词'], ['副', '副词'], ['介', '介词'],
+    ['连', '连词'], ['助', '助词'], ['叹', '叹词'], ['数', '数词'], ['量', '量词'], ['名', '名词'],
+  ]);
+  static _POS_EN = new Map([
+    ['时间', 'Time word'], ['处所', 'Place word'], ['方位', 'Locative'], ['区别', 'Distinguisher'], ['拟声', 'Onomatopoeia'],
+    ['代', 'Pronoun'], ['动', 'Verb'], ['形', 'Adjective'], ['副', 'Adverb'], ['介', 'Preposition'],
+    ['连', 'Conjunction'], ['助', 'Particle'], ['叹', 'Interjection'], ['数', 'Numeral'], ['量', 'Classifier'], ['名', 'Noun'],
+  ]);
+
   /**
    * 将 HSK 词性标签缩写映射为中文名称。
+   * 使用静态 Map 实现 O(k) 查找（k 为映射条目数），避免每次调用重建对象。
    * @param {string} pos - 词性标签 (如 '副', '动', '形')
    * @returns {string} 中文名称 (如 '副词', '动词', '形容词')
    */
   _posLabelZh(pos) {
-    const map = {
-      '代': '代词', '动': '动词', '形': '形容词', '副': '副词', '介': '介词',
-      '连': '连词', '助': '助词', '叹': '叹词', '数': '数词', '量': '量词',
-      '名': '名词', '区别': '区别词', '拟声': '拟声词', '时间': '时间词',
-      '处所': '处所词', '方位': '方位词'
-    };
-    for (const [key, label] of Object.entries(map)) {
+    for (const [key, label] of GrammarAnalyzer._POS_ZH) {
       if (pos.includes(key)) return label;
     }
     return '词';
@@ -1459,20 +1423,66 @@ Example output:
 
   /**
    * 将 HSK 词性标签缩写映射为英文名称。
+   * 使用静态 Map 实现 O(k) 查找，避免每次调用重建对象。
    * @param {string} pos - 词性标签 (如 '副', '动', '形')
    * @returns {string} 英文名称 (如 'Adverb', 'Verb', 'Adjective')
    */
   _posLabelEn(pos) {
-    const map = {
-      '代': 'Pronoun', '动': 'Verb', '形': 'Adjective', '副': 'Adverb', '介': 'Preposition',
-      '连': 'Conjunction', '助': 'Particle', '叹': 'Interjection', '数': 'Numeral', '量': 'Classifier',
-      '名': 'Noun', '区别': 'Distinguisher', '拟声': 'Onomatopoeia', '时间': 'Time word',
-      '处所': 'Place word', '方位': 'Locative'
-    };
-    for (const [key, label] of Object.entries(map)) {
+    for (const [key, label] of GrammarAnalyzer._POS_EN) {
       if (pos.includes(key)) return label;
     }
     return 'Word';
+  }
+
+  /**
+   * 重叠消解：对匹配结果列表进行去重，按来源优先级和长度保留最优匹配。
+   * 规则：
+   *   - 不同等级的匹配可以共存（代表不同语法层次）
+   *   - 同等级匹配：按 SOURCE_PRIORITY 保留优先级更高的；相同优先级保留更长的
+   *
+   * 此方法在本地分析（analyze）和 LLM 合并（analyzeWithLLM）中均会调用，
+   * 统一维护，避免重复逻辑和不一致的优先级定义。
+   *
+   * @param {MatchResult[]} matches - 待消解的匹配列表（会被就地排序）
+   * @returns {MatchResult[]} 消解后的匹配列表
+   */
+  _resolveOverlaps(matches) {
+    const srcPrio = (m) => GrammarAnalyzer.SOURCE_PRIORITY[m.source] || 0;
+    matches.sort((a, b) =>
+      a.position - b.position ||
+      srcPrio(b) - srcPrio(a) ||
+      b.pattern.length - a.pattern.length ||
+      b.level - a.level
+    );
+    const filtered = [];
+    for (const m of matches) {
+      let dominated = false;
+      for (let j = 0; j < filtered.length; j++) {
+        const f = filtered[j];
+        const fStart = f.position, fEnd = f.position + f.pattern.length;
+        const mStart = m.position, mEnd = m.position + m.pattern.length;
+        if (mStart < 0) break; // 无效位置直接丢弃
+        const overlap = Math.max(0, Math.min(fEnd, mEnd) - Math.max(fStart, mStart));
+        if (overlap === 0) continue;
+        if (f.level !== m.level) continue; // 不同等级 → 共存
+
+        const fP = srcPrio(f), mP = srcPrio(m);
+        if (fP > mP) { dominated = true; break; }
+        if (mP > fP) { filtered[j] = m; dominated = true; break; }
+
+        // 同等级同优先级：保留更长的
+        if (mStart >= fStart && mEnd <= fEnd && m.pattern.length < f.pattern.length) { dominated = true; break; }
+        if (fStart >= mStart && fEnd <= mEnd && f.pattern.length < m.pattern.length) { filtered[j] = m; dominated = true; break; }
+
+        const shorterLen = Math.min(f.pattern.length, m.pattern.length);
+        if (overlap > shorterLen * 0.5) {
+          if (m.pattern.length >= f.pattern.length) { filtered[j] = m; }
+          dominated = true; break;
+        }
+      }
+      if (!dominated) filtered.push(m);
+    }
+    return filtered;
   }
 
   /**
@@ -1485,8 +1495,9 @@ Example output:
     if (!result.matches.length) return 1;
     let weightedSum = 0, totalWeight = 0;
     for (const [lvl, count] of Object.entries(result.levelDistribution)) {
+      const numericLvl = parseInt(lvl, 10); // 显式转换，避免字符串乘法的隐式转换
       const w = count * count;
-      weightedSum += lvl * w;
+      weightedSum += numericLvl * w;
       totalWeight += w;
     }
     return Math.max(1, Math.min(6, Math.round(weightedSum / totalWeight)));

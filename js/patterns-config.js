@@ -1,10 +1,18 @@
 /**
  * MoxiAnalyzer Patterns Configuration
- * 
+ *
  * Extracted from analyzer.js for easier maintenance and testing.
  * All regex patterns are defined here; structural patterns below.
- * 
+ *
+ * @version 5.3
+ * @updated 2025-06
+ *
  * Usage: This file sets window.MoxiPatternsConfig which is read by GrammarAnalyzer.
+ *
+ * 维护说明：
+ *   - 修改正则前请先在 analyzer.test.js 中添加对应测试用例
+ *   - 新增 pattern 须包含 level / desc_zh / desc_en 三个字段
+ *   - NON_COMPLEMENT_WORDS 白名单同步更新到 GrammarAnalyzer.NON_COMPLEMENT
  */
 
 // ═══════════════════════════════════════════════════════════════
@@ -23,7 +31,7 @@ const BUILTIN_PATTERNS = [
   {pattern: /没有/g, level: 1, desc_zh: '否定（没有）', desc_en: 'Negation (没有)'},
   {pattern: /不[是会不会能好坏对错多大小少长新高矮胖瘦冷热远近快慢早晚忙累苦甜酸咸干净便宜贵难容易认真安静安全危险重要简单复杂美丽漂亮帅开心高兴难过伤心生气害怕担心舒服好吃有趣无聊]/g, level: 1, desc_zh: '否定（不+形容词/能愿）', desc_en: 'Negation (不+adj/modal)'},
   {pattern: /没[有]?[来去吃喝做写看听说读买卖走跑坐站睡醒开门关门知道认识学习工作休息吃饭洗澡上课]/g, level: 1, desc_zh: '否定（没+动词）', desc_en: 'Negation (没+verb)'},
-  {pattern: /别[进来出去说笑哭跑走动碰摸吵喝吃买做看]/g, level: 1, desc_zh: '否定祈使（别+动词）', desc_en: 'Negative imperative (别+verb)'},
+  {pattern: /别[\u4e00-\u9fff]{1,4}/g, level: 1, desc_zh: '否定祈使（别+VP）', desc_en: 'Negative imperative (别+VP)'},
 
   // ─── 存现句 ───
   {pattern: /[\u4e00-\u9fff]{1,6}上[\u4e00-\u9fff]{1,2}着/g, level: 1, desc_zh: '存现句（…上/里/前+着）', desc_en: 'Existential sentence (loc+着)'},
@@ -518,6 +526,23 @@ const BUILTIN_PATTERNS = [
   // ─── 特殊结构 ───
   {pattern: /与其说[\u4e00-\u9fff，]{1,10}不如说/g, level: 5, desc_zh: '比喻（与其说…不如说）', desc_en: 'Rather (与其说…不如说)'},
   {pattern: /说是[\u4e00-\u9fff]{1,6}，其实/g, level: 4, desc_zh: '转折（说是…其实…）', desc_en: 'Concessive (说是…其实…)'},
+
+  // ─── 口语高频补充（v5.3） ───
+  // "别担心/别客气/别着急" 等含"别"的固定口语词组（优先匹配，列在通用 别+VP 之前）
+  {pattern: /别担心|别客气|别着急|别介意|别见怪|别误会/g, level: 2, desc_zh: '口语短语（别+固定）', desc_en: 'Spoken phrase (别+fixed)'},
+  // "算了/得了" 放弃/劝阻语气
+  {pattern: /算了[吧呗]?|得了[吧]?/g, level: 2, desc_zh: '口语短语（算了/得了）', desc_en: 'Spoken phrase (算了/得了)'},
+  // 双重否定（不得不/不能不）
+  {pattern: /不得不[\u4e00-\u9fff]{1,6}/g, level: 4, desc_zh: '双重否定（不得不）', desc_en: 'Double negation (不得不)'},
+  {pattern: /不能不[\u4e00-\u9fff]{1,6}/g, level: 4, desc_zh: '双重否定（不能不）', desc_en: 'Double negation (不能不)'},
+  // 只要…就… 条件句
+  {pattern: /只要[^，。？！；\n]{2,15}就[\u4e00-\u9fff]/g, level: 3, desc_zh: '条件句（只要…就…）', desc_en: 'Conditional (只要…就…)'},
+  // 一边…一边…
+  {pattern: /一边[\u4e00-\u9fff]{1,8}一边[\u4e00-\u9fff]{1,8}/g, level: 2, desc_zh: '并列状语（一边…一边…）', desc_en: 'Simultaneous action (一边…一边…)'},
+  // 越来越…
+  {pattern: /越来越[\u4e00-\u9fff]{1,6}/g, level: 2, desc_zh: '递进（越来越…）', desc_en: 'Progressive (越来越…)'},
+  // 越…越…
+  {pattern: /越[\u4e00-\u9fff]{1,6}越[\u4e00-\u9fff]{1,6}/g, level: 3, desc_zh: '递进（越…越…）', desc_en: 'Progressive (越…越…)'},
 ];
 
 
@@ -575,7 +600,32 @@ const STRUCTURAL_PATTERNS = [
   { head: '看上去', tail: '很', gap: {min: 0, max: 2}, exclude: '，。？！；\n', level: 2, desc_zh: '情态（看上去很…）', desc_en: 'Modal (看上去很…)'},
 
   // ── 一量比一量 递进比较 ──
-  { head: '一', tail: '比一', gap: {min: 1, max: 3}, exclude: '，。？！；\n', level: 3, desc_zh: '递进比较（一X比一X）', desc_en: 'Progressive comparative (一X比一X)'},
+  { head: '一', tail: '比一', gap: {min: 1, max: 3}, exclude: new Set('，。？！；\n'), level: 3, desc_zh: '递进比较（一X比一X）', desc_en: 'Progressive comparative (一X比一X)'},
+
+  // ── v5.3 新增 ──
+
+  // 不管/无论…都/也
+  { head: '不管', tail: '都', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 3, desc_zh: '条件（不管…都）', desc_en: 'Conditional (不管…都)'},
+  { head: '不管', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 3, desc_zh: '条件（不管…也）', desc_en: 'Conditional (不管…也)'},
+  { head: '无论', tail: '都', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '条件（无论…都）', desc_en: 'Conditional (无论…都)'},
+  { head: '无论', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '条件（无论…也）', desc_en: 'Conditional (无论…也)'},
+
+  // 宁可/宁愿…也不/也要
+  { head: '宁可', tail: '也不', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '取舍（宁可…也不…）', desc_en: 'Trade-off (宁可…也不…)'},
+  { head: '宁愿', tail: '也不', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '取舍（宁愿…也不…）', desc_en: 'Trade-off (宁愿…也不…)'},
+
+  // 不是…而是…
+  { head: '不是', tail: '而是', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '对比（不是…而是…）', desc_en: 'Contrast (不是…而是…)'},
+
+  // 之所以…是因为…
+  { head: '之所以', tail: '是因为', gap: {min: 1, max: 25}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '因果（之所以…是因为…）', desc_en: 'Causal (之所以…是因为…)'},
+
+  // 与其…不如…
+  { head: '与其', tail: '不如', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '取舍（与其…不如…）', desc_en: 'Trade-off (与其…不如…)'},
+
+  // 即使/就算…也…
+  { head: '即使', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '让步（即使…也…）', desc_en: 'Concessive (即使…也…)'},
+  { head: '就算', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '让步（就算…也…）', desc_en: 'Concessive (就算…也…)'},
 ];
 
 

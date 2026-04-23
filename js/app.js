@@ -103,6 +103,7 @@
       history_matches: '语法点',
       history_text_preview: '文本预览',
       history_record_count: '记录总数',
+      history_export_csv: '📄 导出历史 CSV',
     },
     en: {
       brand: 'MoXi',
@@ -188,10 +189,9 @@
       history_matches: 'Matches',
       history_text_preview: 'Text Preview',
       history_record_count: 'Total Records',
+      history_export_csv: '📄 Export History CSV',
     }
   };
-
-  // ── Example texts ────────────────────────────────────
   const EXAMPLES = {
     l1: '你好，我叫玛丽。我是学生，我在北京大学学习中文。我有一个哥哥和一个妹妹。',
     l2: '我正在学习中文，已经学了半年了。他比我高，跑得也比谁都快。你吃过北京烤鸭吗？',
@@ -725,6 +725,8 @@
   function bindHistoryPage() {
     const clearBtn = document.getElementById('historyClearBtn');
     if (clearBtn) clearBtn.addEventListener('click', clearAllHistory);
+    const exportBtn = document.getElementById('historyExportCSV');
+    if (exportBtn) exportBtn.addEventListener('click', exportHistoryCSV);
   }
 
   function renderHistoryPage() {
@@ -839,7 +841,45 @@
     URL.revokeObjectURL(url);
   }
 
-  function renderResults(result) {
+  /**
+   * 导出历史记录为 CSV 文件。
+   * 包含每条记录的时间、字数、句数、推荐等级、最高等级、语法点数、是否使用 LLM 及文本预览。
+   */
+  function exportHistoryCSV() {
+    const history = getHistory();
+    if (!history.length) return;
+    const isZh = currentLang === 'zh';
+    const headers = isZh
+      ? ['时间', '字数', '句数', '推荐等级', '最高等级', '平均等级', '语法点数', 'LLM辅助', '文本预览']
+      : ['Time', 'Chars', 'Sentences', 'Suggested Level', 'Max Level', 'Avg Level', 'Matches', 'LLM Used', 'Text Preview'];
+    let csv = BOM + headers.join(',') + '\n';
+    for (const h of history) {
+      const date = new Date(h.timestamp).toLocaleString(isZh ? 'zh-CN' : 'en-US');
+      const preview = (h.text || '').slice(0, 50).replace(/[\n\r]/g, ' ');
+      csv += [
+        `"${date}"`,
+        h.charCount,
+        h.sentenceCount,
+        `HSK${h.suggestedLevel}`,
+        `HSK${h.maxLevel}`,
+        h.avgLevel,
+        h.matchCount,
+        h.llmUsed ? (isZh ? '是' : 'Yes') : (isZh ? '否' : 'No'),
+        `"${preview.replace(/"/g, '""')}"`,
+      ].join(',') + '\n';
+    }
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = isZh
+      ? `分析历史_${new Date().toISOString().slice(0, 10)}.csv`
+      : `analysis_history_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+
     const container = document.getElementById('results');
     container.classList.remove('hidden');
 
@@ -1014,7 +1054,7 @@
 
   // ── Browse Page ───────────────────────────────────────
   function bindBrowsePage() {
-    document.getElementById('grammarSearch').addEventListener('input', () => renderBrowsePage());
+    document.getElementById('grammarSearch').addEventListener('input', debounce(() => renderBrowsePage(), 180));
   }
 
   function renderBrowsePage() {
@@ -1110,7 +1150,7 @@
         <div class="r-stat-label">${dict.avg_per_level}</div>
       </div>
       <div class="r-stat featured">
-        <div class="r-stat-val" style="color:var(--accent-gold)">${maxLvl}级</div>
+        <div class="r-stat-val" style="color:var(--accent-gold)">${LEVEL_NAMES[maxLvl] || ('L' + maxLvl)}</div>
         <div class="r-stat-label">${dict.most_points}</div>
       </div>
     `;
@@ -1155,9 +1195,30 @@
   }
 
   // ── Helpers ───────────────────────────────────────────
+
+  /**
+   * 防抖：在 wait 毫秒内多次调用时只执行最后一次。
+   * 用于搜索框输入等高频事件，避免每次按键都触发完整渲染。
+   * @param {Function} fn - 目标函数
+   * @param {number} wait - 延迟毫秒数（默认 180）
+   * @returns {Function} 防抖包装后的函数
+   */
+  function debounce(fn, wait = 180) {
+    let timer = null;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
 })();
