@@ -5804,7 +5804,7 @@ const LEVEL_NAMES = {
   "4": "HSK4",
   "5": "HSK5",
   "6": "HSK6",
-  "7": "高等"
+  "7": "HSK7"
 };
 
 const LEVEL_COLORS = {

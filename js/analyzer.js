@@ -798,8 +798,8 @@ class GrammarAnalyzer {
       const s = sent.text;
       const sStart = sent.start;
 
-      // ── 祈使句：V/VP + 吧/呗 ──
-      if (/[吧呗啊]$/.test(s) && /[\u4e00-\u9fff]{2,}(吧|呗|啊)$/.test(s)) {
+      // ── 祈使句：V/VP + 吧/呗（排除动词重叠+吧）───
+      if (/[吧呗]$/.test(s) && !/([一-鿿])\1吧$/.test(s) && /[\u4e00-\u9fff]{2,}(吧|呗|啊)$/.test(s)) {
         const match = s.match(/([\u4e00-\u9fff]{2,}(吧|呗))$/);
         if (match) {
           matches.push({
@@ -1476,7 +1476,16 @@ Example output:
         if (mStart < 0) break; // 无效位置直接丢弃
         const overlap = Math.max(0, Math.min(fEnd, mEnd) - Math.max(fStart, mStart));
         if (overlap === 0) continue;
-        if (f.level !== m.level) continue; // 不同等级 → 共存
+        if (f.level !== m.level) {
+          // 同一位置的不同等级 → 取更高等级
+          const fLen = f.pattern.length, mLen = m.pattern.length;
+          const shorterLen = Math.min(fLen, mLen);
+          if (overlap >= shorterLen * 0.8) {
+            if (m.level > f.level) { filtered[j] = m; dominated = true; break; }
+            else { dominated = true; break; }
+          }
+          continue;
+        }
 
         const fP = srcPrio(f), mP = srcPrio(m);
         if (fP > mP) { dominated = true; break; }
@@ -1530,39 +1539,74 @@ Example output:
         : '⚠️ No clear grammar points detected. Please provide a longer text for accurate analysis.');
       return suggestions;
     }
-    const high = result.matches.filter(m => m.level >= 4);
-    if (high.length > 0) {
-      const pts = [...new Set(high.map(m => m.grammarPoint))].slice(0, 5);
-      suggestions.push(lang === 'zh'
-        ? `📌 检测到 ${high.length} 处中高级(HSK4-7)语法，涉及：${pts.join('、')}`
-        : `📌 Found ${high.length} advanced (HSK4-7) grammar points: ${pts.join(', ')}`);
-    }
-    if (Object.keys(result.levelDistribution).length > 0) {
-      const dominant = Object.entries(result.levelDistribution).sort((a, b) => b[1] - a[1])[0];
-      const lvl = parseInt(dominant[0]);
-      suggestions.push(lang === 'zh'
-        ? `📊 语法等级主要集中在 HSK${lvl}，占比 ${Math.round(dominant[1] / result.matches.length * 100)}%`
-        : `📊 Grammar mainly concentrated at HSK${lvl}, ${Math.round(dominant[1] / result.matches.length * 100)}%`);
-    }
-    const unique = new Set(result.matches.map(m => m.grammarPoint));
-    const richness = unique.size / result.sentenceCount;
-    if (richness >= 3) suggestions.push(lang === 'zh' ? '✅ 语法丰富度：优秀' : '✅ Grammar richness: Excellent');
-    else if (richness >= 1.5) suggestions.push(lang === 'zh' ? '📝 语法丰富度：良好' : '📝 Grammar richness: Good');
-    else suggestions.push(lang === 'zh' ? '💬 语法丰富度：一般' : '💬 Grammar richness: Average');
 
+    // 1. 语法密度 (matches per sentence)
+    const density = result.matches.length / Math.max(1, result.sentenceCount);
+    if (lang === 'zh') {
+      suggestions.push(`📐 语法密度：${density.toFixed(1)} 处/句（共 ${result.matches.length} 个语法点，${result.sentenceCount} 句）`);
+    } else {
+      suggestions.push(`📐 Density: ${density.toFixed(1)} matches/sentence (${result.matches.length} points across ${result.sentenceCount} sentences)`);
+    }
+
+    // 2. 等级跨度 — 精确显示 min-max 范围及主要分布
+    if (Object.keys(result.levelDistribution).length > 0) {
+      const dist = result.levelDistribution;
+      const levels = Object.keys(dist).map(Number).sort((a, b) => a - b);
+      const lMin = levels[0], lMax = levels[levels.length - 1];
+      const total = result.matches.length;
+
+      // 各等级百分比（超过5%的列出）
+      const dominant = Object.entries(dist).sort((a, b) => b[1] - a[1]);
+      const parts = dominant
+        .filter(([, cnt]) => cnt / total > 0.05)
+        .map(([lvl, cnt]) => `HSK${lvl} ${Math.round(cnt / total * 100)}%`);
+      const spanText = lang === 'zh'
+        ? `📊 等级分布：${lMin === lMax ? `集中 HSK${lMin}` : `HSK${lMin}–HSK${lMax}`}（${parts.join('，')}）`
+        : `📊 Level range: ${lMin === lMax ? `HSK${lMin} only` : `HSK${lMin}–HSK${lMax}`} (${parts.join(', ')})`;
+
+      // 补充：主导等级提示
+      const dLvl = parseInt(dominant[0][0]);
+      const dPct = Math.round(dominant[0][1] / total * 100);
+      if (dPct >= 70 && lMin !== lMax) {
+        suggestions.push(spanText + (lang === 'zh'
+          ? `，主导等级 HSK${dLvl}（${dPct}%）`
+          : `, dominated by HSK${dLvl} (${dPct}%)`));
+      } else {
+        suggestions.push(spanText);
+      }
+    }
+
+    // 3. 语法多样性 (unique grammar point types per sentence)
+    const unique = new Set(result.matches.map(m => m.grammarPoint));
+    const diversity = unique.size / Math.max(1, result.sentenceCount);
+    if (lang === 'zh') {
+      suggestions.push(`🔤 语法多样性：${diversity.toFixed(1)} 类/句（共涉及 ${unique.size} 种语法类型）`);
+    } else {
+      suggestions.push(`🔤 Diversity: ${diversity.toFixed(1)} types/sentence (${unique.size} distinct grammar types)`);
+    }
+
+    // 4. 高级语法占比与综合难度判定
+    const l5plusCount = result.matches.filter(m => m.level >= 5).length;
+    const l5plusRatio = l5plusCount / Math.max(1, result.matches.length);
     const sl = result.suggestedLevel;
-    if (sl >= 7) suggestions.push(lang === 'zh'
-      ? '🏛️ 文本含有高等(HSK7-9)语法，适合高级学术/文学级学习者。'
-      : '🏛️ Text contains advanced (HSK 7-9) grammar, suitable for high-level academic/literary learners.');
-    else if (sl >= 5) suggestions.push(lang === 'zh'
-      ? '🎓 文本含有大量高级语法，适合HSK5-6级/专业级学习者。'
-      : '🎓 Text contains extensive advanced grammar, suitable for HSK 5-6 / professional learners.');
-    else if (sl >= 3) suggestions.push(lang === 'zh'
-      ? '📖 文本语法难度适中，适合HSK3-4级学习者。'
-      : '📖 Text grammar difficulty is moderate, suitable for HSK 3-4 learners.');
-    else suggestions.push(lang === 'zh'
-      ? '📗 文本语法较为基础，适合HSK1-2级初学者。'
-      : '📗 Text grammar is basic, suitable for HSK 1-2 beginners.');
+
+    if (lang === 'zh') {
+      if (l5plusRatio >= 0.5) {
+        suggestions.push(`🏛️ 高等语法(HSK5+)占比 ${Math.round(l5plusRatio * 100)}%，综合推荐等级 HSK${sl}，适合学术/专业场景。`);
+      } else if (l5plusRatio >= 0.2) {
+        suggestions.push(`🎓 中高级语法(HSK5+)占比 ${Math.round(l5plusRatio * 100)}%，综合推荐等级 HSK${sl}，适合进阶学习者。`);
+      } else {
+        suggestions.push(`📗 基础语法为主，HSK5+仅占 ${Math.round(l5plusRatio * 100)}%，综合推荐等级 HSK${sl}，适合初、中级学习者。`);
+      }
+    } else {
+      if (l5plusRatio >= 0.5) {
+        suggestions.push(`🏛️ Advanced (HSK5+): ${Math.round(l5plusRatio * 100)}%, recommended level HSK${sl}, suitable for academic/professional use.`);
+      } else if (l5plusRatio >= 0.2) {
+        suggestions.push(`🎓 Upper-intermediate (HSK5+): ${Math.round(l5plusRatio * 100)}%, recommended level HSK${sl}, suitable for advanced learners.`);
+      } else {
+        suggestions.push(`📗 Mostly basic grammar, HSK5+: ${Math.round(l5plusRatio * 100)}%, recommended level HSK${sl}, suitable for beginners/intermediate.`);
+      }
+    }
 
     return suggestions;
   }

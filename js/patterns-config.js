@@ -128,7 +128,7 @@ const BUILTIN_PATTERNS = [
 
   // ─── 简单并列结构 ───
   {pattern: /[\u4e00-\u9fff]{2,6}并[\u4e00-\u9fff]{2,6}/g, level: 3, desc_zh: '并列结构（A并B）', desc_en: 'Coordinating structure (A and B)'},
-  {pattern: /了(?=[。！？\u4e00])/g, level: 1, desc_zh: '动态助词（了₁）', desc_en: 'Aspect particle (了₁)'},
+  {pattern: /了(?=[。！？\u4e00-\u9fff，、；：\n])/g, level: 1, desc_zh: '动态助词（了₁/了₂）', desc_en: 'Aspect particle (了₁/了₂)'},
   {pattern: /[\u4e00-\u9fff]{1,6}着[\u4e00-\u9fff]{0,4}/g, level: 3, desc_zh: '持续体（V着…）', desc_en: 'Durative aspect (V着…)'},
   {pattern: /[\u4e00-\u9fff]{1,6}过[\u4e00-\u9fff]{0,4}/g, level: 2, desc_zh: '经历体（V过…）', desc_en: 'Experiential aspect (V过…)'},
 
@@ -416,7 +416,8 @@ const BUILTIN_PATTERNS = [
   {pattern: /正[因由于为][\u4e00-\u9fff]{0,6}如此/g, level: 5, desc_zh: '因果（正因如此）', desc_en: 'Causal (正因为如此)'},
 
   // ─── 强调方法 ───
-  {pattern: /再也不[没会敢想]/g, level: 5, desc_zh: '强调否定（再也不/没…）', desc_en: 'Emphatic negation (再也不/没…)'},
+  {pattern: /再也不[一-鿿]/g, level: 5, desc_zh: '强调否定（再也不…）', desc_en: 'Emphatic negation (再也不…)'},
+  {pattern: /再也没[一-鿿]/g, level: 5, desc_zh: '强调否定（再也没…）', desc_en: 'Emphatic negation (再也没…)'},
   {pattern: /可(?=[\u4e00-\u9fff]{1,4}[了啦啊呀呢吧])/g, level: 5, desc_zh: '强调（副词"可"）', desc_en: 'Emphasis (adverb 可)'},
   {pattern: /怎么都[\u4e00-\u9fff]{0,4}[不没]/g, level: 5, desc_zh: '强调否定（怎么都/也+不/没）', desc_en: 'Emphatic negation (怎么都/也+不/没)'},
   {pattern: /怎么也[\u4e00-\u9fff]{0,4}[不没]/g, level: 5, desc_zh: '强调否定（怎么都/也+不/没）', desc_en: 'Emphatic negation (怎么都/也+不/没)'},
