@@ -415,9 +415,16 @@ const BUILTIN_PATTERNS = [
   {pattern: /对于[\u4e00-\u9fff]{1,10}/g, level: 4, desc_zh: '介词（对于）', desc_en: 'Preposition (对于)'},
   {pattern: /正[因由于为][\u4e00-\u9fff]{0,6}如此/g, level: 5, desc_zh: '因果（正因如此）', desc_en: 'Causal (正因为如此)'},
 
-  // ═══════════════════════════════════════════════════════════════
+  // ─── 强调方法 ───
+  {pattern: /再也不[没会敢想]/g, level: 5, desc_zh: '强调否定（再也不/没…）', desc_en: 'Emphatic negation (再也不/没…)'},
+  {pattern: /可(?=[\u4e00-\u9fff]{1,4}[了啦啊呀呢吧])/g, level: 5, desc_zh: '强调（副词"可"）', desc_en: 'Emphasis (adverb 可)'},
+  {pattern: /怎么都[\u4e00-\u9fff]{0,4}[不没]/g, level: 5, desc_zh: '强调否定（怎么都/也+不/没）', desc_en: 'Emphatic negation (怎么都/也+不/没)'},
+  {pattern: /怎么也[\u4e00-\u9fff]{0,4}[不没]/g, level: 5, desc_zh: '强调否定（怎么都/也+不/没）', desc_en: 'Emphatic negation (怎么都/也+不/没)'},
+  {pattern: /非[\u4e00-\u9fff，]{1,10}不可/g, level: 6, desc_zh: '强调（非…不可）', desc_en: 'Emphasis (非…不可)'},
+
+  // ═══════════════════════════════════════════════════════════════════
   // Level 6 — 精通 Proficient (HSK 6 / Academic)
-  // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════
 
   // ─── 文言否定 ───
   {pattern: /而非|非但/g, level: 6, desc_zh: '文言否定（而非）', desc_en: 'Classical negation (而非)'},
@@ -626,6 +633,60 @@ const STRUCTURAL_PATTERNS = [
   // 即使/就算…也…
   { head: '即使', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '让步（即使…也…）', desc_en: 'Concessive (即使…也…)'},
   { head: '就算', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '让步（就算…也…）', desc_en: 'Concessive (就算…也…)'},
+
+  // ── 复句关联词对 (Compound conjunction pairs) ──
+
+  // Level 4 — 中高级
+  { head: '首先', tail: '其次', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '承接（首先…其次…）', desc_en: 'Sequential (首先…其次…)' },
+  { head: '既', tail: '又', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '并列（既…又…）', desc_en: 'Coordination (既…又…)' },
+  { head: '既', tail: '也', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '并列（既…也…）', desc_en: 'Coordination (既…也…)' },
+  { head: '假如', tail: '就', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '假设（假如…就…）', desc_en: 'Hypothetical (假如…就…)' },
+  { head: '万一', tail: '就', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '假设（万一…就…）', desc_en: 'Hypothetical (万一…就…)' },
+  { head: '既然', tail: '就', gap: {min: 1, max: 25}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '因果（既然…就…）', desc_en: 'Causal (既然…就…)' },
+  { head: '哪怕', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '让步（哪怕…也…）', desc_en: 'Concessive (哪怕…也…)' },
+  { head: '哪怕', tail: '还', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '让步（哪怕…还…）', desc_en: 'Concessive (哪怕…还…)' },
+
+  // Level 5 — 高级
+  { head: '尽管', tail: '但是', gap: {min: 1, max: 25}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '让步（尽管…但是…）', desc_en: 'Concessive (尽管…但是…)' },
+  { head: '一旦', tail: '就', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '条件（一旦…就…）', desc_en: 'Conditional (一旦…就…)' },
+  { head: '除非', tail: '才', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '条件（除非…才…）', desc_en: 'Conditional (除非…才…)' },
+  { head: '除非', tail: '否则', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '条件（除非…否则…）', desc_en: 'Conditional (除非…否则…)' },
+  { head: '再', tail: '也', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '让步（再…也…）', desc_en: 'Concessive (再…也…)' },
+
+  // Level 6 — 精通
+  { head: '凡是', tail: '都', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 6, desc_zh: '条件（凡是…都…）', desc_en: 'Conditional (凡是…都…)' },
+  { head: '要么', tail: '要么', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 6, desc_zh: '选择（要么…要么…）', desc_en: 'Alternative (要么…要么…)' },
+  { head: '不但不', tail: '反而', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 6, desc_zh: '递进反转（不但不…反而…）', desc_en: 'Contrastive (不但不…反而…)' },
+  { head: '不但没', tail: '反而', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 6, desc_zh: '递进反转（不但没…反而…）', desc_en: 'Contrastive (不但没…反而…)' },
+
+  // Level 7 — 高等
+  { head: '固然', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '让步（固然…也…）', desc_en: 'Concessive (固然…也…)' },
+  { head: '纵然', tail: '也', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '让步（纵然…也…）', desc_en: 'Concessive (纵然…也…)' },
+  { head: '鉴于', tail: '应当', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '因果（鉴于…应当）', desc_en: 'Causal (鉴于…应当)' },
+  { head: '鉴于', tail: '必须', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '因果（鉴于…必须）', desc_en: 'Causal (鉴于…必须)' },
+  { head: '鉴于', tail: '需要', gap: {min: 1, max: 20}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '因果（鉴于…需要）', desc_en: 'Causal (鉴于…需要)' },
+
+  // ── 固定格式 (Fixed format patterns) ──
+
+  // Level 4 — 中高级
+  { head: '在', tail: '上', gap: {min: 1, max: 12}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '固定格式（在…上）', desc_en: 'Fixed format (在…上)' },
+  { head: '在', tail: '下', gap: {min: 1, max: 12}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '固定格式（在…下）', desc_en: 'Fixed format (在…下)' },
+  { head: '在', tail: '中', gap: {min: 1, max: 12}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '固定格式（在…中）', desc_en: 'Fixed format (在…中)' },
+  { head: '在', tail: '方面', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 4, desc_zh: '固定格式（在…方面）', desc_en: 'Fixed format (在…方面)' },
+
+  // Level 5 — 高级
+  { head: '够', tail: '的', gap: {min: 0, max: 8}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '固定格式（够…的）', desc_en: 'Fixed format (够…的)' },
+  { head: '拿', tail: '来说', gap: {min: 1, max: 12}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '固定格式（拿…来说）', desc_en: 'Fixed format (拿…来说)' },
+  { head: '在', tail: '看来', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 5, desc_zh: '固定格式（在…看来）', desc_en: 'Fixed format (在…看来)' },
+
+  // Level 6 — 精通
+  { head: '为了', tail: '而', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 6, desc_zh: '固定格式（为了…而…）', desc_en: 'Fixed format (为了…而…)' },
+
+  // Level 7 — 高等
+  { head: '无非', tail: '而已', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '固定格式（无非…而已）', desc_en: 'Fixed format (无非…而已)' },
+  { head: '不过', tail: '而已', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '固定格式（不过…而已）', desc_en: 'Fixed format (不过…而已)' },
+  { head: '以', tail: '为', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '固定格式（以…为…）', desc_en: 'Fixed format (以…为…)' },
+  { head: '因', tail: '而', gap: {min: 1, max: 15}, exclude: new Set('。？！；\n'), level: 7, desc_zh: '固定格式（因…而…）', desc_en: 'Fixed format (因…而…)' },
 ];
 
 

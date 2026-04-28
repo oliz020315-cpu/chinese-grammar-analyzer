@@ -450,6 +450,16 @@ class GrammarAnalyzer {
       '总而言之': { level: 6, grammarPoint: '总结标记', grammarPointEn: 'Summary marker' },
       '综上所述': { level: 6, grammarPoint: '总结标记', grammarPointEn: 'Summary marker' },
       '由此可见': { level: 6, grammarPoint: '推论标记', grammarPointEn: 'Inference marker' },
+      '归根到底': { level: 7, grammarPoint: '总结标记（高等）', grammarPointEn: 'Summary marker (advanced)' },
+      '这样一来': { level: 7, grammarPoint: '承接标记（高等）', grammarPointEn: 'Sequential marker (advanced)' },
+      '总的来说': { level: 7, grammarPoint: '总结标记（高等）', grammarPointEn: 'Summary marker (advanced)' },
+      '无论如何': { level: 7, grammarPoint: '让步标记（高等）', grammarPointEn: 'Concessive marker (advanced)' },
+      '除此之外': { level: 7, grammarPoint: '递进标记（高等）', grammarPointEn: 'Additive marker (advanced)' },
+      '与此相关': { level: 7, grammarPoint: '关联标记（高等）', grammarPointEn: 'Related marker (advanced)' },
+      '就此而言': { level: 7, grammarPoint: '限定标记（高等）', grammarPointEn: 'Limiting marker (advanced)' },
+      '总体而言': { level: 7, grammarPoint: '总结标记（高等）', grammarPointEn: 'Summary marker (advanced)' },
+      '简言之': { level: 7, grammarPoint: '总结标记（高等）', grammarPointEn: 'Summary marker (advanced)' },
+      '换言之': { level: 7, grammarPoint: '释义标记（高等）', grammarPointEn: 'Paraphrase marker (advanced)' },
       '由此可知': { level: 6, grammarPoint: '推论标记', grammarPointEn: 'Inference marker' },
       '基于此': { level: 6, grammarPoint: '基于', grammarPointEn: 'Based on' },
       '值得注意的是': { level: 5, grammarPoint: '话语标记', grammarPointEn: 'Discourse marker' },
@@ -1002,7 +1012,7 @@ class GrammarAnalyzer {
       
       // Match HSK vocabulary words that are grammar-relevant
       // Focus on: conjunctions, prepositions, adverbs, particles, pronouns, modal verbs
-      if (token.level <= 6) {
+      if (token.level <= 7) {
         const isGrammarRelevant = GRAMMAR_POS.has(posTag) ||
           posTag.includes('副') || posTag.includes('连') || posTag.includes('介') ||
           posTag.includes('助') || posTag.includes('代');
@@ -1157,8 +1167,8 @@ class GrammarAnalyzer {
         ? `# 角色
 你是一位精通《国际中文教育中文水平等级标准》(GF 0025-2021) 的中文语法分析引擎。你的任务是对用户提交的中文文本进行逐句扫描，识别出所有语法点并标注等级。
 
-# 等级判定依据（1-6级）
-该标准将语法分为两大板块、六大语法类别，各等级递进关系如下：
+# 等级判定依据（1-7级）
+该标准将语法分为两大板块、七大语法类别，各等级递进关系如下：
 
 ## 语法等级速查
 - **1级**：基础词类（人称/指示/疑问代词、基本能愿动词、程度副词"很/非常/太"、否定词"不/没"、量词"个/本/杯"、方位词"上/里/前"）+ 基本句式（"是"字句、"有"字句、简单存现句）+ 基本助词（"的/了/着"）+ 基本介词（"在/从/跟"）
@@ -1167,6 +1177,7 @@ class GrammarAnalyzer {
 - **4级**：复杂"把/被"句式 + 状态补语（"V得+Adj"）+ 复杂趋向补语 + 情态补语 + 使动/被动深层用法 + "是…的"强调句 + 反问句 + 程度补语深化 + 抽象关联词（"无论…都/即使…也"）
 - **5级**：强调句式（"…的是/倒是"）+ 插入语 + 复杂复句（让步/假设/条件）+ 固定格式（"与其…不如/不是…而是/之所以…是因为"）+ "有"+V（非领属）+ 成语/四字格
 - **6级**：书面语语法（"以/于/则/亦/且/尚"）+ 古汉语残留（"乃/之/其/矣"）+ 紧缩复句 + 复杂修辞结构 + 高级固定格式（"鉴于/诚然/毋庸讳言"）
+- **7级（高等）**：文言书面语（"需/何/该/另/尚/亦"）+ 高阶能愿动词 + 复杂文言句式 + 书面语关联词对（"固然…也/纵然…也/鉴于……"）+ 高级修辞与语篇衔接 + 固定格式（"以…为…/因…而…/无非…而已"）
 
 ## 关键原则
 1. **pattern 必须是原文精确子串**——逐字符匹配，不能改写、省略或重新组合
@@ -1183,21 +1194,22 @@ class GrammarAnalyzer {
 
 ## 输出格式
 仅返回 JSON 数组，每个元素：
-{"pattern":"原文片段","grammarPoint":"语法点名称","level":等级数字,"position":起始位置}
+{"pattern":"原文片段","grammarPoint":"语法点名称","level":1-7,"position":起始位置}
 
 示例输入："他先把作业写完了，然后出去玩了。"
 示例输出：
 [{"pattern":"先把作业写完了","grammarPoint":"把字句","level":3,"position":1},{"pattern":"然后","grammarPoint":"关联词","level":2,"position":8},{"pattern":"出去了","grammarPoint":"趋向补语","level":3,"position":10},{"pattern":"玩了","grammarPoint":"动态助词：了","level":1,"position":12}]`
         : `# Role
-You are a Chinese grammar analysis engine specializing in GF 0025-2021 (International Chinese Language Education Grammar Standard). Scan the submitted text sentence by sentence, identify ALL grammar points, and rate each at levels 1-6.
+You are a Chinese grammar analysis engine specializing in GF 0025-2021 (International Chinese Language Education Grammar Standard). Scan the submitted text sentence by sentence, identify ALL grammar points, and rate each at levels 1-7.
 
-# Level Guidelines (HSK 1-6)
+# Level Guidelines (HSK 1-7)
 - **Level 1**: Basic word classes (personal/demonstrative/interrogative pronouns, basic modal verbs, degree adverbs "很/非常/太", negation "不/没", measure words "个/本/杯", locatives "上/里/前") + basic sentence patterns ("是" sentence, "有" sentence, simple existential) + basic particles ("的/了/着") + basic prepositions ("在/从/跟")
 - **Level 2**: Time expressions ("…的时候/以前/以后"), aspect particle "过" + "比" comparative + serial verb / pivotal sentences + conjunctions ("因为…所以/如果…就/虽然…但是") + basic resultative complements ("到/见/完")
 - **Level 3**: "把" sentences + "被" sentences (introductory) + directional complements ("起来/下去/出来") + potential complements ("不了/得完") + degree complements ("…极了/得很") + durative aspect "着" + time-measure complements + complex attributives/adverbials + special patterns ("连…都/也")
 - **Level 4**: Complex "把/被" constructions + state complements ("V得+Adj") + complex directional complements + "是…的" cleft sentences + rhetorical questions + complex correlatives ("无论…都/即使…也")
 - **Level 5**: Emphasis patterns ("…的是/倒是") + insert phrases + complex compound sentences + fixed formats ("与其…不如/不是…而是/之所以…是因为") + idioms/four-character expressions
 - **Level 6**: Literary grammar ("以/于/则/亦/且/尚") + classical remnants ("乃/之/其/矣") + contracted complex sentences + advanced rhetorical structures
+- **Level 7 (Advanced)**: Classical written language ("需/何/该/另/尚/亦") + advanced modal verbs + complex classical constructions + written conjunction pairs ("固然…也/纵然…也/鉴于……") + advanced rhetoric and discourse cohesion + fixed formats ("以…为…/因…而…/无非…而已")
 
 ## Key Rules
 1. **pattern must be an exact substring** of the original text — character-by-character match
@@ -1214,7 +1226,7 @@ You are a Chinese grammar analysis engine specializing in GF 0025-2021 (Internat
 
 ## Output Format
 Return ONLY a JSON array:
-[{"pattern":"exact text","grammarPoint":"grammar point name","level":1-6,"position":starting index}]
+[{"pattern":"exact text","grammarPoint":"grammar point name","level":1-7,"position":starting index}]
 
 Example input: "他先把作业写完了，然后出去玩了。"
 Example output:
@@ -1319,7 +1331,7 @@ Example output:
       llmMatches = llmMatches.filter(m => m.pattern && m.grammarPoint && m.level).map(m => ({
         pattern: String(m.pattern),
         grammarPoint: String(m.grammarPoint),
-        level: Math.max(1, Math.min(6, parseInt(m.level, 10) || 1)),
+        level: Math.max(1, Math.min(7, parseInt(m.level, 10) || 1)),
         position: typeof m.position === 'number' ? m.position : -1,
         gpId: m.gpId || ''
       }));
@@ -1357,7 +1369,7 @@ Example output:
             localResult.matches.push({
               pattern: lm.pattern,
               grammarPoint: lm.grammarPoint,
-              level: Math.max(1, Math.min(6, parseInt(lm.level, 10) || 1)),
+              level: Math.max(1, Math.min(7, parseInt(lm.level, 10) || 1)),
               position: validPos,
               source: 'llm',
               gpId: lm.gpId || ''
@@ -1500,7 +1512,7 @@ Example output:
       weightedSum += numericLvl * w;
       totalWeight += w;
     }
-    return Math.max(1, Math.min(6, Math.round(weightedSum / totalWeight)));
+    return Math.max(1, Math.min(7, Math.round(weightedSum / totalWeight)));
   }
 
   /**
@@ -1522,8 +1534,8 @@ Example output:
     if (high.length > 0) {
       const pts = [...new Set(high.map(m => m.grammarPoint))].slice(0, 5);
       suggestions.push(lang === 'zh'
-        ? `📌 检测到 ${high.length} 处中高级(HSK4-6)语法，涉及：${pts.join('、')}`
-        : `📌 Found ${high.length} advanced (HSK4-6) grammar points: ${pts.join(', ')}`);
+        ? `📌 检测到 ${high.length} 处中高级(HSK4-7)语法，涉及：${pts.join('、')}`
+        : `📌 Found ${high.length} advanced (HSK4-7) grammar points: ${pts.join(', ')}`);
     }
     if (Object.keys(result.levelDistribution).length > 0) {
       const dominant = Object.entries(result.levelDistribution).sort((a, b) => b[1] - a[1])[0];
@@ -1539,7 +1551,10 @@ Example output:
     else suggestions.push(lang === 'zh' ? '💬 语法丰富度：一般' : '💬 Grammar richness: Average');
 
     const sl = result.suggestedLevel;
-    if (sl >= 5) suggestions.push(lang === 'zh'
+    if (sl >= 7) suggestions.push(lang === 'zh'
+      ? '🏛️ 文本含有高等(HSK7-9)语法，适合高级学术/文学级学习者。'
+      : '🏛️ Text contains advanced (HSK 7-9) grammar, suitable for high-level academic/literary learners.');
+    else if (sl >= 5) suggestions.push(lang === 'zh'
       ? '🎓 文本含有大量高级语法，适合HSK5-6级/专业级学习者。'
       : '🎓 Text contains extensive advanced grammar, suitable for HSK 5-6 / professional learners.');
     else if (sl >= 3) suggestions.push(lang === 'zh'

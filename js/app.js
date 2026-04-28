@@ -826,7 +826,7 @@
     csv += [statLabels.suggested, `HSK${lastResult.suggestedLevel}`].join(',') + '\n';
     csv += [statLabels.max, `HSK${lastResult.maxLevel}`].join(',') + '\n';
     csv += [statLabels.avg, lastResult.avgLevel].join(',') + '\n';
-    for (let l = 1; l <= 6; l++) {
+    for (let l = 1; l <= 7; l++) {
       csv += [statLabels.matches.replace('{n}', l), lastResult.levelDistribution[l] || 0].join(',') + '\n';
     }
 
@@ -1064,9 +1064,9 @@
 
   function renderLevelTabs() {
     const el = document.getElementById('levelTabs');
-    const labels = { all: 'All', 1: '壹', 2: '贰', 3: '叁', 4: '肆', 5: '伍', 6: '陆' };
+    const labels = { all: 'All', 1: '壹', 2: '贰', 3: '叁', 4: '肆', 5: '伍', 6: '陆', 7: '柒' };
     let html = `<button class="lv-tab all ${currentLevelFilter === 'all' ? 'active' : ''}" data-level="all">${labels.all}</button>`;
-    for (let l = 1; l <= 6; l++) {
+    for (let l = 1; l <= 7; l++) {
       html += `<button class="lv-tab ${currentLevelFilter == l ? 'active' : ''}" data-level="${l}" style="background:${LEVEL_COLORS[l]}">${labels[l]}</button>`;
     }
     el.innerHTML = html;
