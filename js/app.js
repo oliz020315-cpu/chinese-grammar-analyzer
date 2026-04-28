@@ -879,7 +879,8 @@
     URL.revokeObjectURL(url);
   }
 
-
+  // ── Render Results ─────────────────────────────────
+  function renderResults(result) {
     const container = document.getElementById('results');
     container.classList.remove('hidden');
 
